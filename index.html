@@ -6,66 +6,76 @@
     <title>Пробег автомобиля</title>
 
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
+/* Затенение */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
 
-            /* Фоновое изображение */
-            background-image: url("car.jpg"); /* ← ПРИМЕНИМ ТВОЁ ФОТО */
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+.overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
 
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+/* Модальное окно */
+.modal {
+    background: white;
+    padding: 25px;
+    width: 320px;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.3);
+    transform: translateY(30px);
+    opacity: 0;
+    animation: fadeInUp 0.4s forwards;
+}
 
-        /* Полупрозрачная карточка */
-        .card {
-            background: rgba(255, 255, 255, 0.85);
-            padding: 25px 35px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            text-align: center;
-            max-width: 350px;
-            width: 100%;
-            backdrop-filter: blur(6px);
-        }
+@keyframes fadeInUp {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
 
-        h1 {
-            font-size: 22px;
-            margin-bottom: 15px;
-            color: #333;
-        }
+.modal input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid #999;
+}
 
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            border: 1px solid #999;
-            font-size: 16px;
-        }
+.modal button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #0078ff;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
 
-        button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background-color: #0078ff;
-            color: white;
-            font-size: 17px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
+.error {
+    color: red;
+    margin-top: 8px;
+    min-height: 18px;
+}
 
-        button:hover {
-            background-color: #005fcc;
-        }
+.hidden {
+    display: none;
+}
     </style>
 </head>
 <body>
@@ -79,41 +89,75 @@
         </form>
     </div>
 
+    <!-- Модальное окно авторизации -->
+    <div id="authOverlay" class="overlay hidden">
+        <div class="modal">
+            <h2>Авторизация</h2>
+            <input type="email" id="authEmail" placeholder="Email" required>
+            <input type="password" id="authPassword" placeholder="Пароль" required>
+            <button id="authLoginBtn">Войти</button>
+            <p id="authError" class="error"></p>
+        </div>
+    </div>
+
     <!-- FIREBASE SCRIPT -->
-    <script type="module">
+<script type="module">
 
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
-            authDomain: "focus3-df69e.firebaseapp.com",
-            projectId: "focus3-df69e",
-            storageBucket: "focus3-df69e.appspot.com",
-            messagingSenderId: "820116608318",
-            appId: "1:820116608318:web:927be143470b2aa885c86f"
-        };
+const firebaseConfig = {
+    apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
+    authDomain: "focus3-df69e.firebaseapp.com",
+    projectId: "focus3-df69e",
+    storageBucket: "focus3-df69e.appspot.com",
+    messagingSenderId: "820116608318",
+    appId: "1:820116608318:web:927be143470b2aa885c86f"
+};
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-        const form = document.getElementById('mileageForm');
+// DOM элементы
+const overlay = document.getElementById("authOverlay");
+let pendingMileage = null;
 
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
+// Открываем модалку после нажатия "Сохранить"
+document.getElementById("mileageForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    pendingMileage = Number(document.getElementById("mileage").value);
 
-            const mileage = document.getElementById('mileage').value;
+    // показываем модалку
+    overlay.classList.remove("hidden");
+    overlay.classList.add("show");
+});
 
-            await addDoc(collection(db, "mileages"), {
-                mileage: Number(mileage),
-                date: new Date().toISOString()
-            });
+// Обрабатываем авторизацию
+document.getElementById("authLoginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("authEmail").value;
+    const password = document.getElementById("authPassword").value;
 
-            alert("Пробег сохранён!");
-            form.reset();
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+
+        // Если авторизация успешна → сохраняем пробег
+        await addDoc(collection(db, "mileages"), {
+            mileage: pendingMileage,
+            date: new Date().toISOString()
         });
 
-    </script>
+        alert("Пробег сохранён!");
+        window.location.reload(); // обновим страницу
+
+    } catch (err) {
+        document.getElementById("authError").textContent = "Ошибка: " + err.message;
+    }
+});
+
+</script>
+
 
 </body>
 </html>
