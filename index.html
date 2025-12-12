@@ -144,6 +144,7 @@
             padding: 12px;
             border: none;
             border-radius: 10px;
+
             background: linear-gradient(135deg, #6ba8ff, #005fcc);
             color: white;
             font-size: 18px;
@@ -167,18 +168,17 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.55);
-            display: flex;
+            display: none;
             justify-content: center;
             align-items: center;
             backdrop-filter: blur(4px);
             opacity: 0;
-            transition: opacity 0.35s ease;
-            pointer-events: none;
+            transition: 0.35s ease;
         }
 
         .overlay.show {
+            display: flex;
             opacity: 1;
-            pointer-events: auto;
         }
 
         .modal {
@@ -187,7 +187,6 @@
             padding: 25px;
             width: 320px;
             border-radius: 16px;
-
             backdrop-filter: blur(10px);
             text-align: center;
             box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
@@ -201,13 +200,11 @@
             background: rgba(255,255,255,0.95);
         }
 
-        /* крестик */
         .close-btn {
             position: absolute;
             top: 10px;
             right: 14px;
             font-size: 26px;
-            color: #333;
             cursor: pointer;
             transition: 0.2s;
         }
@@ -219,7 +216,6 @@
         .error {
             color: rgb(255, 60, 60);
             min-height: 18px;
-            margin-top: 8px;
         }
 
         .hidden { display: none; }
@@ -237,10 +233,10 @@
     <!-- Email пользователя -->
     <div class="user-email hidden" id="userEmail"></div>
 
-    <!-- Кнопка выйти (внизу справа) -->
+    <!-- Кнопка "Выйти" -->
     <button class="logout-btn hidden" id="logoutBtn">Выйти</button>
 
-    <!-- Главная карточка -->
+    <!-- Карточка -->
     <div class="card">
         <h1>Введите пробег</h1>
 
@@ -278,7 +274,6 @@
         </div>
     </div>
 
-    <!-- FIREBASE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -290,7 +285,7 @@
             onAuthStateChanged
         } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-        /* === Инициализация Firebase === */
+        /* Firebase */
         const firebaseConfig = {
             apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
             authDomain: "focus3-df69e.firebaseapp.com",
@@ -304,20 +299,14 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        /* === ЭЛЕМЕНТЫ === */
-        const openLoginBtn = document.getElementById("openLoginBtn");
-        const openRegisterBtn = document.getElementById("openRegisterBtn");
-
+        /* Элементы */
         const authOverlay = document.getElementById("authOverlay");
         const registerOverlay = document.getElementById("registerOverlay");
-
-        const closeAuth = document.getElementById("closeAuth");
-        const closeRegister = document.getElementById("closeRegister");
 
         const logoutBtn = document.getElementById("logoutBtn");
         const userEmailDiv = document.getElementById("userEmail");
 
-        /* === Показываем email, если вошёл === */
+        /* ===== ОТОБРАЖЕНИЕ EMAIL ===== */
         onAuthStateChanged(auth, user => {
             if (user) {
                 userEmailDiv.textContent = user.email;
@@ -329,40 +318,39 @@
             }
         });
 
-        /* === Открыть модалку входа === */
-        openLoginBtn.onclick = () => {
+        /* ===== Открытие модалок ===== */
+        document.getElementById("openLoginBtn").onclick = () => {
             authOverlay.classList.add("show");
         };
 
-        /* === Открыть модалку регистрации === */
-        openRegisterBtn.onclick = () => {
+        document.getElementById("openRegisterBtn").onclick = () => {
             registerOverlay.classList.add("show");
         };
 
-        /* === Закрыть модалки === */
-        closeAuth.onclick = () => {
+        /* ===== Закрытие модалок ===== */
+        document.getElementById("closeAuth").onclick = () => {
             authOverlay.classList.remove("show");
         };
 
-        closeRegister.onclick = () => {
+        document.getElementById("closeRegister").onclick = () => {
             registerOverlay.classList.remove("show");
         };
 
-        /* === ВХОД === */
+        /* ===== Вход ===== */
         document.getElementById("authLoginBtn").onclick = async () => {
             const email = authEmail.value;
             const password = authPassword.value;
 
             try {
                 await signInWithEmailAndPassword(auth, email, password);
-                alert("Вы вошли");
+                alert("Успешный вход");
                 authOverlay.classList.remove("show");
             } catch (err) {
                 authError.textContent = err.message;
             }
         };
 
-        /* === РЕГИСТРАЦИЯ === */
+        /* ===== Регистрация ===== */
         document.getElementById("regCreateBtn").onclick = async () => {
             const email = regEmail.value;
             const password = regPassword.value;
@@ -376,13 +364,13 @@
             }
         };
 
-        /* === ВЫЙТИ === */
+        /* ===== Выход ===== */
         logoutBtn.onclick = async () => {
             await signOut(auth);
             alert("Вы вышли");
         };
 
-        /* === Сохранение пробега === */
+        /* ===== СОХРАНЕНИЕ ПРОБЕГА ===== */
         document.getElementById("mileageForm").onsubmit = async (e) => {
             e.preventDefault();
 
@@ -392,10 +380,10 @@
                 return;
             }
 
-            const mileage = Number(mileage.value);
+            const mileageValue = Number(document.getElementById("mileage").value);
 
             await addDoc(collection(db, "mileages"), {
-                mileage,
+                mileage: mileageValue,
                 user: user.email,
                 date: new Date().toISOString()
             });
