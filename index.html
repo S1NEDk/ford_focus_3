@@ -13,27 +13,40 @@
         <button type="submit">Отправить</button>
     </form>
 
-    <script>
-        // Получаем форму и поле ввода
-        const form = document.getElementById('mileageForm');
-        const mileageInput = document.getElementById('mileage');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-        // Обработчик отправки формы
+        // 👉 ВСТАВЬ СВОЙ firebaseConfig СЮДА
+		const firebaseConfig = {
+			apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
+			authDomain: "focus3-df69e.firebaseapp.com",
+			projectId: "focus3-df69e",
+			storageBucket: "focus3-df69e.firebasestorage.app",
+			messagingSenderId: "820116608318",
+			appId: "1:820116608318:web:927be143470b2aa885c86f"
+		};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const form = document.getElementById('mileageForm');
+
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
+            const mileage = document.getElementById('mileage').value;
 
-            const mileage = mileageInput.value;
+            try {
+                await addDoc(collection(db, "mileages"), {
+                    mileage: Number(mileage),
+                    date: new Date().toISOString()
+                });
 
-            if (mileage) {
-                try {
-                    // Здесь будет отправка данных в базу данных
-                    alert(`Данные успешно отправлены: Пробег = ${mileage} км`);
-                    // Здесь можно добавить запрос к серверу или базе данных
-                } catch (error) {
-                    console.error('Ошибка отправки данных:', error);
-                }
-            } else {
-                alert('Пожалуйста, введите пробег!');
+                alert("Пробег успешно сохранён!");
+                form.reset();
+            } catch (e) {
+                alert("Ошибка сохранения: " + e.message);
+                console.error(e);
             }
         });
     </script>
