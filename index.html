@@ -30,7 +30,7 @@
             to { opacity: 1; }
         }
 
-        /* ==== ГЛАВНАЯ КАРТОЧКА (GLASSMORPHISM) ==== */
+        /* ==== ГЛАВНАЯ КАРТОЧКА (GLASS) ==== */
         .card {
             background: rgba(255, 255, 255, 0.18);
             padding: 35px 45px;
@@ -105,7 +105,7 @@
             box-shadow: 0 6px 22px rgba(0,0,0,0.35);
         }
 
-        /* ==== Кнопка "Создать аккаунт" ==== */
+        /* ==== КНОПКА РЕГИСТРАЦИИ ВВЕРХУ ==== */
         .register-top-btn, .logout-btn {
             position: absolute;
             top: 25px;
@@ -132,15 +132,15 @@
             background: rgba(255,255,255,0.55);
         }
 
-        /* ==== Модальные окна ==== */
+        /* ==== МОДАЛКИ ==== */
         .overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-
             background: rgba(0,0,0,0.55);
+
             display: flex;
             justify-content: center;
             align-items: center;
@@ -157,6 +157,7 @@
         }
 
         .modal {
+            position: relative;
             background: rgba(255, 255, 255, 0.8);
             padding: 25px;
             width: 320px;
@@ -171,6 +172,23 @@
             transform: translateY(30px);
             opacity: 0;
             animation: fadeUp 0.4s forwards ease-out;
+        }
+
+        /* Кнопка-крестик */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            font-size: 26px;
+            color: #333;
+            cursor: pointer;
+            transition: 0.2s;
+            user-select: none;
+        }
+
+        .close-btn:hover {
+            color: #000;
+            transform: scale(1.15);
         }
 
         .modal input {
@@ -189,10 +207,10 @@
 
 <body>
 
-    <!-- КНОПКА СОЗДАТЬ АККАУНТ -->
+    <!-- КНОПКА "СОЗДАТЬ АККАУНТ" -->
     <button class="register-top-btn" id="openRegisterBtn">Создать аккаунт</button>
 
-    <!-- КНОПКА ВЫЙТИ (пока скрыта, покажем если юзер вошёл) -->
+    <!-- КНОПКА "ВЫЙТИ" -->
     <button class="logout-btn hidden" id="logoutBtn">Выйти</button>
 
     <!-- КАРТОЧКА -->
@@ -208,13 +226,13 @@
     <!-- МОДАЛКА АВТОРИЗАЦИИ -->
     <div id="authOverlay" class="overlay hidden">
         <div class="modal">
-            <h2>Авторизация</h2>
+            <div class="close-btn" id="closeAuth">×</div>
 
+            <h2>Авторизация</h2>
             <input type="email" id="authEmail" placeholder="Email" required>
             <input type="password" id="authPassword" placeholder="Пароль" required>
 
             <button id="authLoginBtn">Войти</button>
-
             <p id="authError" class="error"></p>
         </div>
     </div>
@@ -222,24 +240,24 @@
     <!-- МОДАЛКА РЕГИСТРАЦИИ -->
     <div id="registerOverlay" class="overlay hidden">
         <div class="modal">
-            <h2>Регистрация</h2>
+            <div class="close-btn" id="closeRegister">×</div>
 
+            <h2>Регистрация</h2>
             <input type="email" id="regEmail" placeholder="Email" required>
             <input type="password" id="regPassword" placeholder="Пароль" required>
 
             <button id="regCreateBtn">Создать аккаунт</button>
-
             <p id="regError" class="error"></p>
         </div>
     </div>
 
-    <!-- FIREBASE LOGIC -->
+    <!-- FIREBASE SCRIPT -->
     <script type="module">
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-        import { 
-            getAuth, 
+        import {
+            getAuth,
             signInWithEmailAndPassword,
             createUserWithEmailAndPassword,
             signOut,
@@ -266,7 +284,7 @@
         const logoutBtn = document.getElementById("logoutBtn");
         const registerTopBtn = document.getElementById("openRegisterBtn");
 
-        /* ==== Проверка пользователя ==== */
+        /* ==== Проверяем, вошёл ли пользователь ==== */
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 logoutBtn.classList.remove("hidden");
@@ -284,7 +302,7 @@
             window.location.reload();
         });
 
-        /* ==== Открытие авторизации ==== */
+        /* ==== Открытие модалки авторизации ==== */
         document.getElementById("mileageForm").addEventListener("submit", (e) => {
             e.preventDefault();
             pendingMileage = Number(document.getElementById("mileage").value);
@@ -293,7 +311,13 @@
             authOverlay.classList.add("show");
         });
 
-        /* ==== Вход ==== */
+        /* ==== Закрытие авторизации крестиком ==== */
+        document.getElementById("closeAuth").addEventListener("click", () => {
+            authOverlay.classList.remove("show");
+            setTimeout(() => authOverlay.classList.add("hidden"), 300);
+        });
+
+        /* ==== Авторизация ==== */
         document.getElementById("authLoginBtn").addEventListener("click", async () => {
             const email = document.getElementById("authEmail").value;
             const password = document.getElementById("authPassword").value;
@@ -319,6 +343,12 @@
         document.getElementById("openRegisterBtn").addEventListener("click", () => {
             registerOverlay.classList.remove("hidden");
             registerOverlay.classList.add("show");
+        });
+
+        /* ==== Закрытие регистрации крестиком ==== */
+        document.getElementById("closeRegister").addEventListener("click", () => {
+            registerOverlay.classList.remove("show");
+            setTimeout(() => registerOverlay.classList.add("hidden"), 300);
         });
 
         /* ==== Создание аккаунта ==== */
