@@ -4,29 +4,95 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пробег автомобиля</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+
+            /* Фоновое изображение */
+            background-image: url("car.jpg"); /* ← ПРИМЕНИМ ТВОЁ ФОТО */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Полупрозрачная карточка */
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            padding: 25px 35px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 350px;
+            width: 100%;
+            backdrop-filter: blur(6px);
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #999;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #0078ff;
+            color: white;
+            font-size: 17px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: #005fcc;
+        }
+    </style>
 </head>
 <body>
-    <h1>Введите пробег автомобиля</h1>
-    <form id="mileageForm">
-        <label for="mileage">Пробег:</label>
-        <input type="number" id="mileage" name="mileage" placeholder="Введите пробег в км" required>
-        <button type="submit">Отправить</button>
-    </form>
 
+    <div class="card">
+        <h1>Введите пробег</h1>
+
+        <form id="mileageForm">
+            <input type="number" id="mileage" placeholder="Пробег в км" required>
+            <button type="submit">Сохранить</button>
+        </form>
+    </div>
+
+    <!-- FIREBASE SCRIPT -->
     <script type="module">
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-        // 👉 ВСТАВЬ СВОЙ firebaseConfig СЮДА
-		const firebaseConfig = {
-			apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
-			authDomain: "focus3-df69e.firebaseapp.com",
-			projectId: "focus3-df69e",
-			storageBucket: "focus3-df69e.appspot.com",  // ← ИСПРАВЛЕНО
-			messagingSenderId: "820116608318",
-			appId: "1:820116608318:web:927be143470b2aa885c86f"
-		};
-
+        const firebaseConfig = {
+            apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
+            authDomain: "focus3-df69e.firebaseapp.com",
+            projectId: "focus3-df69e",
+            storageBucket: "focus3-df69e.appspot.com",
+            messagingSenderId: "820116608318",
+            appId: "1:820116608318:web:927be143470b2aa885c86f"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -35,21 +101,19 @@
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
+
             const mileage = document.getElementById('mileage').value;
 
-            try {
-                await addDoc(collection(db, "mileages"), {
-                    mileage: Number(mileage),
-                    date: new Date().toISOString()
-                });
+            await addDoc(collection(db, "mileages"), {
+                mileage: Number(mileage),
+                date: new Date().toISOString()
+            });
 
-                alert("Пробег успешно сохранён!");
-                form.reset();
-            } catch (e) {
-                alert("Ошибка сохранения: " + e.message);
-                console.error(e);
-            }
+            alert("Пробег сохранён!");
+            form.reset();
         });
+
     </script>
+
 </body>
 </html>
