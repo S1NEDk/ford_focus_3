@@ -62,6 +62,7 @@
             box-shadow: 0 0 12px rgba(255,255,255,0.6);
         }
 
+        /* ==== Email пользователя ==== */
         .user-email {
             position: absolute;
             top: 25px;
@@ -96,21 +97,29 @@
             box-shadow: 0 0 12px rgba(255,255,255,0.6);
         }
 
-        /* ==== ГЛАВНАЯ СТЕКЛЯННАЯ КАРТОЧКА ==== */
+        /* ==== ГЛАВНАЯ КАРТОЧКА ==== */
         .card {
             background: rgba(255, 255, 255, 0.18);
             padding: 35px 45px;
             border-radius: 18px;
             backdrop-filter: blur(12px) saturate(180%);
-            -webkit-backdrop-filter: blur(12px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.35);
+
             text-align: center;
             max-width: 360px;
             width: 100%;
+
             box-shadow: 0 8px 32px rgba(0,0,0,0.35);
             transform: translateY(25px);
             opacity: 0;
             animation: fadeUp 0.9s forwards ease-out;
+        }
+
+        @keyframes fadeUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         h1 {
@@ -130,16 +139,11 @@
             background: rgba(255,255,255,0.8);
         }
 
-        input:focus {
-            outline: 2px solid rgba(0,120,255,0.7);
-        }
-
         button {
             width: 100%;
             padding: 12px;
             border: none;
             border-radius: 10px;
-
             background: linear-gradient(135deg, #6ba8ff, #005fcc);
             color: white;
             font-size: 18px;
@@ -168,8 +172,8 @@
             align-items: center;
             backdrop-filter: blur(4px);
             opacity: 0;
-            pointer-events: none;
             transition: opacity 0.35s ease;
+            pointer-events: none;
         }
 
         .overlay.show {
@@ -179,13 +183,15 @@
 
         .modal {
             position: relative;
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.9);
             padding: 25px;
             width: 320px;
             border-radius: 16px;
+
             backdrop-filter: blur(10px);
             text-align: center;
             box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+
             transform: translateY(30px);
             opacity: 0;
             animation: fadeUp 0.4s forwards ease-out;
@@ -234,7 +240,7 @@
     <!-- Кнопка выйти (внизу справа) -->
     <button class="logout-btn hidden" id="logoutBtn">Выйти</button>
 
-    <!-- Карточка -->
+    <!-- Главная карточка -->
     <div class="card">
         <h1>Введите пробег</h1>
 
@@ -244,28 +250,28 @@
         </form>
     </div>
 
-    <!-- МОДАЛКА ВХОДА -->
-    <div id="authOverlay" class="overlay hidden">
+    <!-- Модалка входа -->
+    <div id="authOverlay" class="overlay">
         <div class="modal">
             <div class="close-btn" id="closeAuth">×</div>
 
             <h2>Войти</h2>
-            <input type="email" id="authEmail" placeholder="Email" required>
-            <input type="password" id="authPassword" placeholder="Пароль" required>
+            <input type="email" id="authEmail" placeholder="Email">
+            <input type="password" id="authPassword" placeholder="Пароль">
 
             <button id="authLoginBtn">Войти</button>
             <p id="authError" class="error"></p>
         </div>
     </div>
 
-    <!-- МОДАЛКА РЕГИСТРАЦИИ -->
-    <div id="registerOverlay" class="overlay hidden">
+    <!-- Модалка регистрации -->
+    <div id="registerOverlay" class="overlay">
         <div class="modal">
             <div class="close-btn" id="closeRegister">×</div>
 
             <h2>Создать аккаунт</h2>
-            <input type="email" id="regEmail" placeholder="Email" required>
-            <input type="password" id="regPassword" placeholder="Пароль" required>
+            <input type="email" id="regEmail" placeholder="Email">
+            <input type="password" id="regPassword" placeholder="Пароль">
 
             <button id="regCreateBtn">Создать</button>
             <p id="regError" class="error"></p>
@@ -284,6 +290,7 @@
             onAuthStateChanged
         } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
+        /* === Инициализация Firebase === */
         const firebaseConfig = {
             apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
             authDomain: "focus3-df69e.firebaseapp.com",
@@ -297,15 +304,20 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        let pendingMileage = null;
+        /* === ЭЛЕМЕНТЫ === */
+        const openLoginBtn = document.getElementById("openLoginBtn");
+        const openRegisterBtn = document.getElementById("openRegisterBtn");
 
         const authOverlay = document.getElementById("authOverlay");
         const registerOverlay = document.getElementById("registerOverlay");
 
-        const userEmailDiv = document.getElementById("userEmail");
-        const logoutBtn = document.getElementById("logoutBtn");
+        const closeAuth = document.getElementById("closeAuth");
+        const closeRegister = document.getElementById("closeRegister");
 
-        /* ==== Состояние авторизации ==== */
+        const logoutBtn = document.getElementById("logoutBtn");
+        const userEmailDiv = document.getElementById("userEmail");
+
+        /* === Показываем email, если вошёл === */
         onAuthStateChanged(auth, user => {
             if (user) {
                 userEmailDiv.textContent = user.email;
@@ -317,78 +329,70 @@
             }
         });
 
-        /* ==== ВЫЙТИ ==== */
-        logoutBtn.addEventListener("click", async () => {
-            await signOut(auth);
-            alert("Вы вышли");
-            window.location.reload();
-        });
-
-        /* ==== Открыть модалку входа ==== */
-        document.getElementById("openLoginBtn").addEventListener("click", () => {
-            authOverlay.classList.remove("hidden");
+        /* === Открыть модалку входа === */
+        openLoginBtn.onclick = () => {
             authOverlay.classList.add("show");
-        });
+        };
 
-        /* ==== Закрыть вход ==== */
-        document.getElementById("closeAuth").addEventListener("click", () => {
+        /* === Открыть модалку регистрации === */
+        openRegisterBtn.onclick = () => {
+            registerOverlay.classList.add("show");
+        };
+
+        /* === Закрыть модалки === */
+        closeAuth.onclick = () => {
             authOverlay.classList.remove("show");
-            setTimeout(() => authOverlay.classList.add("hidden"), 300);
-        });
+        };
 
-        /* ==== Логин ==== */
-        document.getElementById("authLoginBtn").addEventListener("click", async () => {
-            const email = document.getElementById("authEmail").value;
-            const password = document.getElementById("authPassword").value;
+        closeRegister.onclick = () => {
+            registerOverlay.classList.remove("show");
+        };
+
+        /* === ВХОД === */
+        document.getElementById("authLoginBtn").onclick = async () => {
+            const email = authEmail.value;
+            const password = authPassword.value;
 
             try {
                 await signInWithEmailAndPassword(auth, email, password);
-                alert("Успешный вход!");
-                window.location.reload();
-
+                alert("Вы вошли");
+                authOverlay.classList.remove("show");
             } catch (err) {
-                document.getElementById("authError").textContent = err.message;
+                authError.textContent = err.message;
             }
-        });
+        };
 
-        /* ==== Открыть регистрацию ==== */
-        document.getElementById("openRegisterBtn").addEventListener("click", () => {
-            registerOverlay.classList.remove("hidden");
-            registerOverlay.classList.add("show");
-        });
-
-        /* ==== Закрыть регистрацию ==== */
-        document.getElementById("closeRegister").addEventListener("click", () => {
-            registerOverlay.classList.remove("show");
-            setTimeout(() => registerOverlay.classList.add("hidden"), 300);
-        });
-
-        /* ==== Регистрация ==== */
-        document.getElementById("regCreateBtn").addEventListener("click", async () => {
-            const email = document.getElementById("regEmail").value;
-            const password = document.getElementById("regPassword").value;
+        /* === РЕГИСТРАЦИЯ === */
+        document.getElementById("regCreateBtn").onclick = async () => {
+            const email = regEmail.value;
+            const password = regPassword.value;
 
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
-                alert("Аккаунт создан!");
-                window.location.reload();
-
+                alert("Аккаунт создан");
+                registerOverlay.classList.remove("show");
             } catch (err) {
-                document.getElementById("regError").textContent = err.message;
+                regError.textContent = err.message;
             }
-        });
+        };
 
-        /* ==== Сохранение пробега ==== */
-        document.getElementById("mileageForm").addEventListener("submit", async (e) => {
+        /* === ВЫЙТИ === */
+        logoutBtn.onclick = async () => {
+            await signOut(auth);
+            alert("Вы вышли");
+        };
+
+        /* === Сохранение пробега === */
+        document.getElementById("mileageForm").onsubmit = async (e) => {
             e.preventDefault();
-            const user = auth.currentUser;
 
+            const user = auth.currentUser;
             if (!user) {
-                alert("Сначала войдите в аккаунт");
+                alert("Сначала войдите");
                 return;
             }
 
-            const mileage = Number(document.getElementById("mileage").value);
+            const mileage = Number(mileage.value);
 
             await addDoc(collection(db, "mileages"), {
                 mileage,
@@ -398,8 +402,7 @@
 
             alert("Пробег сохранён!");
             window.location.reload();
-        });
-
+        };
     </script>
 
 </body>
