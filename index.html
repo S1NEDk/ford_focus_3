@@ -36,7 +36,8 @@
             top: 20px;
             width: 100%;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column; /* Располагаем кнопки вертикально */
+            align-items: center; /* Центрируем кнопки по горизонтали */
             padding: 0 25px;
             box-sizing: border-box;
         }
@@ -54,6 +55,7 @@
             transition: background 0.25s, box-shadow 0.25s;
             width: 110px;
             text-align: center;
+            margin-bottom: 10px; /* Отступ между кнопками */
         }
 
         .top-btn:hover {
