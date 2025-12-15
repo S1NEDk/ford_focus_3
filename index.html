@@ -18,7 +18,7 @@ body.dark {
 
 body {
   margin: 0;
-  font-family: Segoe UI, Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
   background: url("car.jpg") center/cover no-repeat;
   height: 100vh;
   color: var(--text);
@@ -32,21 +32,27 @@ body {
   display: flex;
   justify-content: center;
   gap: 10px;
-  z-index: 100;
+  z-index: 10;
 }
 
 .top-btn {
   padding: 8px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.4);
-  background: rgba(255,255,255,.35);
+  background: rgba(255,255,255,0.35);
+  border: 1px solid rgba(255,255,255,0.4);
   color: #fff;
   cursor: pointer;
 }
 
-.hidden { display: none; }
+.top-btn:hover {
+  background: rgba(255,255,255,0.55);
+}
 
-/* ===== USER ===== */
+.hidden {
+  display: none;
+}
+
+/* ===== USER INFO ===== */
 .user-info {
   margin-top: 70px;
   text-align: center;
@@ -68,9 +74,9 @@ body {
 input {
   width: 100%;
   padding: 12px;
+  margin-bottom: 12px;
   border-radius: 10px;
   border: none;
-  margin-bottom: 12px;
 }
 
 /* ===== BUTTON ===== */
@@ -103,14 +109,16 @@ button.main {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.6);
+  background: rgba(0,0,0,0.6);
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 200;
+  z-index: 100;
 }
 
-.overlay.show { display: flex; }
+.overlay.show {
+  display: flex;
+}
 
 .modal {
   background: white;
@@ -147,12 +155,15 @@ button.main {
   <button class="top-btn" id="themeBtn">🌙</button>
 </div>
 
+<!-- USER INFO -->
 <div class="user-info hidden" id="userInfo">
   Вы вошли: <b id="userEmail"></b>
 </div>
 
+<!-- MAIN CARD -->
 <div class="card">
   <h2>Введите пробег</h2>
+
   <form id="mileageForm">
     <input type="number" id="mileage" placeholder="Пробег в км" required>
     <button class="main">Сохранить</button>
@@ -164,10 +175,10 @@ button.main {
   </div>
 </div>
 
-<!-- LOGIN -->
+<!-- LOGIN MODAL -->
 <div class="overlay" id="loginModal">
   <div class="modal">
-    <span class="close" onclick="loginModal.classList.remove('show')">×</span>
+    <span class="close" id="closeLogin">×</span>
     <h3>Вход</h3>
     <input id="loginEmail" placeholder="Email">
     <input id="loginPass" type="password" placeholder="Пароль">
@@ -176,10 +187,10 @@ button.main {
   </div>
 </div>
 
-<!-- REGISTER -->
+<!-- REGISTER MODAL -->
 <div class="overlay" id="registerModal">
   <div class="modal">
-    <span class="close" onclick="registerModal.classList.remove('show')">×</span>
+    <span class="close" id="closeRegister">×</span>
     <h3>Регистрация</h3>
     <input id="regEmail" placeholder="Email">
     <input id="regPass" type="password" placeholder="Пароль">
@@ -190,101 +201,130 @@ button.main {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+/* ===== FIREBASE ===== */
 const firebaseConfig = {
- apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
- authDomain: "focus3-df69e.firebaseapp.com",
- projectId: "focus3-df69e"
+  apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
+  authDomain: "focus3-df69e.firebaseapp.com",
+  projectId: "focus3-df69e"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* ===== DOM ===== */
+const history = document.getElementById("history");
+const historyList = document.getElementById("historyList");
+
 /* ===== THEME ===== */
 if (localStorage.theme === "dark") document.body.classList.add("dark");
 themeBtn.onclick = () => {
- document.body.classList.toggle("dark");
- localStorage.theme = document.body.classList.contains("dark") ? "dark" : "light";
+  document.body.classList.toggle("dark");
+  localStorage.theme =
+    document.body.classList.contains("dark") ? "dark" : "light";
 };
 
-/* ===== AUTH ===== */
+/* ===== AUTH STATE ===== */
 onAuthStateChanged(auth, async user => {
- if (user) {
-   userEmail.textContent = user.email;
-   userInfo.classList.remove("hidden");
-   logoutBtn.classList.remove("hidden");
-   loginBtn.classList.add("hidden");
-   registerBtn.classList.add("hidden");
-   await loadHistory(user.email);
- } else {
-   userInfo.classList.add("hidden");
-   history.classList.add("hidden");
-   logoutBtn.classList.add("hidden");
-   loginBtn.classList.remove("hidden");
-   registerBtn.classList.remove("hidden");
- }
+  if (user) {
+    userEmail.textContent = user.email;
+    userInfo.classList.remove("hidden");
+    logoutBtn.classList.remove("hidden");
+    loginBtn.classList.add("hidden");
+    registerBtn.classList.add("hidden");
+    await loadHistory(user.email);
+  } else {
+    userInfo.classList.add("hidden");
+    history.classList.add("hidden");
+    logoutBtn.classList.add("hidden");
+    loginBtn.classList.remove("hidden");
+    registerBtn.classList.remove("hidden");
+  }
 });
 
 /* ===== HISTORY ===== */
 async function loadHistory(email) {
- historyList.innerHTML = "";
- try {
-   const snap = await getDocs(collection(db,"mileages"));
-   const data = [];
-   snap.forEach(d => {
-     const v = d.data();
-     if (v.user === email) data.push(v);
-   });
-   data
-     .sort((a,b) => b.date.localeCompare(a.date))
-     .slice(0,5)
-     .forEach(v => {
-       const li = document.createElement("li");
-       li.textContent = `${v.mileage} км — ${new Date(v.date).toLocaleDateString()}`;
-       historyList.appendChild(li);
-     });
-   history.classList.remove("hidden");
- } catch(e) {
-   console.error(e);
- }
+  historyList.innerHTML = "";
+
+  const snap = await getDocs(collection(db, "mileages"));
+  const records = [];
+
+  snap.forEach(doc => {
+    const data = doc.data();
+    if (data.user?.toLowerCase() === email.toLowerCase()) {
+      records.push(data);
+    }
+  });
+
+  records
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 5)
+    .forEach(item => {
+      const li = document.createElement("li");
+      li.textContent =
+        `${item.mileage} км — ${new Date(item.date).toLocaleDateString()}`;
+      historyList.appendChild(li);
+    });
+
+  history.classList.toggle("hidden", records.length === 0);
 }
 
 /* ===== EVENTS ===== */
 loginBtn.onclick = () => loginModal.classList.add("show");
 registerBtn.onclick = () => registerModal.classList.add("show");
 
+closeLogin.onclick = () => loginModal.classList.remove("show");
+closeRegister.onclick = () => registerModal.classList.remove("show");
+
 loginModal.onclick = e => e.target === loginModal && loginModal.classList.remove("show");
 registerModal.onclick = e => e.target === registerModal && registerModal.classList.remove("show");
 
 loginSubmit.onclick = async () => {
- try {
-   await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
-   loginModal.classList.remove("show");
- } catch(e){ loginError.textContent = e.message }
+  try {
+    await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
+    loginModal.classList.remove("show");
+  } catch (e) {
+    loginError.textContent = e.message;
+  }
 };
 
 regSubmit.onclick = async () => {
- try {
-   await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
-   registerModal.classList.remove("show");
- } catch(e){ regError.textContent = e.message }
+  try {
+    await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
+    registerModal.classList.remove("show");
+  } catch (e) {
+    regError.textContent = e.message;
+  }
 };
 
 logoutBtn.onclick = () => signOut(auth);
 
 mileageForm.onsubmit = async e => {
- e.preventDefault();
- if (!auth.currentUser) return alert("Сначала войдите");
- await addDoc(collection(db,"mileages"),{
-   mileage: Number(mileage.value),
-   user: auth.currentUser.email,
-   date: new Date().toISOString()
- });
- mileage.value = "";
- await loadHistory(auth.currentUser.email);
+  e.preventDefault();
+  if (!auth.currentUser) return alert("Сначала войдите");
+
+  await addDoc(collection(db, "mileages"), {
+    mileage: Number(mileage.value),
+    user: auth.currentUser.email,
+    date: new Date().toISOString()
+  });
+
+  mileage.value = "";
+  await loadHistory(auth.currentUser.email);
 };
 </script>
 
