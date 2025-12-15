@@ -10,12 +10,10 @@
   --card-bg: rgba(255,255,255,0.18);
   --text: #fff;
 }
-
 body.dark {
   --card-bg: rgba(0,0,0,0.6);
   --text: #f1f1f1;
 }
-
 body {
   margin: 0;
   font-family: "Segoe UI", Arial, sans-serif;
@@ -23,6 +21,7 @@ body {
   height: 100vh;
   color: var(--text);
 }
+.hidden { display: none; }
 
 /* TOP BAR */
 .top-bar {
@@ -34,7 +33,6 @@ body {
   gap: 10px;
   z-index: 10;
 }
-
 .top-btn {
   padding: 8px 14px;
   border-radius: 10px;
@@ -44,9 +42,7 @@ body {
   cursor: pointer;
 }
 
-.hidden { display: none; }
-
-/* USER INFO */
+/* USER */
 .user-info {
   margin-top: 70px;
   text-align: center;
@@ -55,7 +51,7 @@ body {
 /* CARD */
 .card {
   margin: 20px auto;
-  max-width: 400px;
+  max-width: 420px;
   background: var(--card-bg);
   padding: 30px;
   border-radius: 18px;
@@ -82,11 +78,10 @@ button.main {
   color: white;
   cursor: pointer;
 }
-
 button.danger {
   width: 100%;
-  padding: 10px;
   margin-top: 10px;
+  padding: 10px;
   border-radius: 10px;
   border: none;
   background: linear-gradient(135deg,#ff6b6b,#c40000);
@@ -97,8 +92,8 @@ button.danger {
 /* HISTORY */
 .history {
   margin-top: 15px;
-  font-size: 14px;
   text-align: left;
+  font-size: 14px;
 }
 
 /* MODAL */
@@ -110,9 +105,7 @@ button.danger {
   justify-content: center;
   align-items: center;
 }
-
 .overlay.show { display: flex; }
-
 .modal {
   background: white;
   color: black;
@@ -120,9 +113,7 @@ button.danger {
   width: 300px;
   border-radius: 14px;
   position: relative;
-  text-align: center;
 }
-
 .close {
   position: absolute;
   top: 8px;
@@ -186,9 +177,25 @@ button.danger {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+/* FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
   authDomain: "focus3-df69e.firebaseapp.com",
@@ -207,7 +214,8 @@ const historyList = document.getElementById("historyList");
 if (localStorage.theme === "dark") document.body.classList.add("dark");
 themeBtn.onclick = () => {
   document.body.classList.toggle("dark");
-  localStorage.theme = document.body.classList.contains("dark") ? "dark" : "light";
+  localStorage.theme =
+    document.body.classList.contains("dark") ? "dark" : "light";
 };
 
 /* AUTH STATE */
@@ -222,26 +230,33 @@ onAuthStateChanged(auth, async user => {
   } else {
     userInfo.classList.add("hidden");
     history.classList.add("hidden");
+    logoutBtn.classList.add("hidden");
+    loginBtn.classList.remove("hidden");
+    registerBtn.classList.remove("hidden");
   }
 });
 
 /* LOAD HISTORY */
 async function loadHistory(email) {
   historyList.innerHTML = "";
-  const snap = await getDocs(collection(db,"mileages"));
+
+  const q = query(
+    collection(db, "mileages"),
+    where("user", "==", email)
+  );
+
+  const snap = await getDocs(q);
   const records = [];
 
-  snap.forEach(d => {
-    const data = d.data();
-    if (data.user === email) records.push({ id: d.id, ...data });
-  });
+  snap.forEach(d => records.push({ id: d.id, ...d.data() }));
 
   records
     .sort((a,b)=>b.date.localeCompare(a.date))
     .slice(0,5)
     .forEach(r => {
       const li = document.createElement("li");
-      li.textContent = `${r.mileage} км — ${new Date(r.date).toLocaleDateString()}`;
+      li.textContent =
+        `${r.mileage} км — ${new Date(r.date).toLocaleDateString()}`;
       historyList.appendChild(li);
     });
 
@@ -251,15 +266,16 @@ async function loadHistory(email) {
 /* CLEAR DATA */
 clearBtn.onclick = async () => {
   if (!confirm("Удалить ВСЕ записи пробега?")) return;
-  const email = auth.currentUser.email;
-  const snap = await getDocs(collection(db,"mileages"));
+
+  const q = query(
+    collection(db,"mileages"),
+    where("user","==",auth.currentUser.email)
+  );
+  const snap = await getDocs(q);
 
   for (const d of snap.docs) {
-    if (d.data().user === email) {
-      await deleteDoc(doc(db,"mileages", d.id));
-    }
+    await deleteDoc(doc(db,"mileages", d.id));
   }
-  historyList.innerHTML = "";
   history.classList.add("hidden");
 };
 
@@ -274,7 +290,6 @@ loginSubmit.onclick = async () => {
   await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
   loginModal.classList.remove("show");
 };
-
 regSubmit.onclick = async () => {
   await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
   registerModal.classList.remove("show");
