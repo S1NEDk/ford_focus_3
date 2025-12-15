@@ -7,11 +7,11 @@
 
 <style>
 :root {
-  --card-bg: rgba(255,255,255,0.18);
-  --text: #fff;
+  --card-bg: rgba(255,255,255,0.2);
+  --text: #ffffff;
   --btn-bg: rgba(255,255,255,0.4);
-  --modal-bg: #fff;
-  --modal-text: #000;
+  --modal-bg: #ffffff;
+  --modal-text: #000000;
   --input-bg: #f2f2f2;
 }
 
@@ -71,6 +71,46 @@ body.dark .top-bar { background: rgba(0,0,0,0.35); }
   text-align: center;
 }
 
+/* INPUTS */
+input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: none;
+  background: var(--input-bg);
+  color: var(--modal-text);
+}
+
+/* BUTTONS */
+button.main {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg,#6ba8ff,#005fcc);
+  color: #fff;
+  cursor: pointer;
+}
+
+button.danger {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg,#ff6b6b,#c40000);
+  color: #fff;
+  cursor: pointer;
+}
+
+/* HISTORY */
+.history {
+  margin-top: 15px;
+  text-align: left;
+  font-size: 14px;
+}
+
 /* MODAL */
 .overlay {
   position: fixed;
@@ -99,31 +139,12 @@ body.dark .top-bar { background: rgba(0,0,0,0.35); }
   cursor: pointer;
   font-size: 22px;
 }
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 8px;
-  border: none;
-  background: var(--input-bg);
-  color: var(--modal-text);
-}
-
-button.main {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg,#6ba8ff,#005fcc);
-  color: #fff;
-  cursor: pointer;
-}
 </style>
 </head>
 
 <body>
 
+<!-- TOP BAR -->
 <div class="top-bar">
   <button class="top-btn" id="loginBtn">Войти</button>
   <button class="top-btn" id="registerBtn">Создать</button>
@@ -131,12 +152,29 @@ button.main {
   <button class="top-btn" id="themeBtn">🌙</button>
 </div>
 
+<!-- MAIN CARD -->
 <div class="card">
   <p id="loginInfo">Войдите, чтобы сохранять и просматривать пробег автомобиля</p>
-  <p class="hidden" id="userInfo">Вы вошли: <b id="userEmail"></b></p>
+
+  <p class="hidden" id="userInfo">
+    Вы вошли: <b id="userEmail"></b>
+  </p>
+
+  <div id="authContent" class="hidden">
+    <form id="mileageForm">
+      <input type="number" id="mileage" placeholder="Пробег в км" required>
+      <button class="main">Сохранить</button>
+    </form>
+
+    <div class="history hidden" id="history">
+      <h4>Последние 5 записей</h4>
+      <ul id="historyList"></ul>
+      <button class="danger" id="clearBtn">Очистить данные</button>
+    </div>
+  </div>
 </div>
 
-<!-- LOGIN -->
+<!-- LOGIN MODAL -->
 <div class="overlay" id="loginModal">
   <div class="modal">
     <span class="close" id="closeLogin">×</span>
@@ -147,7 +185,7 @@ button.main {
   </div>
 </div>
 
-<!-- REGISTER -->
+<!-- REGISTER MODAL -->
 <div class="overlay" id="registerModal">
   <div class="modal">
     <span class="close" id="closeRegister">×</span>
@@ -182,6 +220,14 @@ const loginInfo = document.getElementById("loginInfo");
 const userInfo = document.getElementById("userInfo");
 const userEmail = document.getElementById("userEmail");
 
+const authContent = document.getElementById("authContent");
+const mileageForm = document.getElementById("mileageForm");
+const mileageInput = document.getElementById("mileage");
+
+const historyBlock = document.getElementById("history");
+const historyList = document.getElementById("historyList");
+const clearBtn = document.getElementById("clearBtn");
+
 /* ===== THEME ===== */
 function applyTheme(dark) {
   document.body.classList.toggle("dark", dark);
@@ -201,13 +247,27 @@ import {
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
   authDomain: "focus3-df69e.firebaseapp.com",
   projectId: "focus3-df69e"
 });
+
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 /* ===== MODALS ===== */
 loginBtn.onclick = () => loginModal.classList.add("show");
@@ -229,24 +289,93 @@ regSubmit.onclick = async () => {
 logoutBtn.onclick = () => signOut(auth);
 
 /* ===== AUTH STATE ===== */
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, async user => {
   if (user) {
     userEmail.textContent = user.email;
     loginInfo.classList.add("hidden");
     userInfo.classList.remove("hidden");
+    authContent.classList.remove("hidden");
 
     loginBtn.classList.add("hidden");
     registerBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
+
+    await loadHistory(user.uid);
   } else {
     loginInfo.classList.remove("hidden");
     userInfo.classList.add("hidden");
+    authContent.classList.add("hidden");
+    historyBlock.classList.add("hidden");
 
     loginBtn.classList.remove("hidden");
     registerBtn.classList.remove("hidden");
     logoutBtn.classList.add("hidden");
   }
 });
+
+/* ===== SAVE MILEAGE ===== */
+mileageForm.onsubmit = async e => {
+  e.preventDefault();
+
+  const user = auth.currentUser;
+  if (!user) return;
+
+  await addDoc(collection(db, "mileages"), {
+    uid: user.uid,
+    mileage: Number(mileageInput.value),
+    date: new Date().toISOString()
+  });
+
+  mileageInput.value = "";
+  await loadHistory(user.uid);
+};
+
+/* ===== LOAD HISTORY ===== */
+async function loadHistory(uid) {
+  historyList.innerHTML = "";
+
+  const q = query(
+    collection(db, "mileages"),
+    where("uid", "==", uid),
+    orderBy("date", "desc"),
+    limit(5)
+  );
+
+  const snap = await getDocs(q);
+
+  if (snap.empty) {
+    historyBlock.classList.add("hidden");
+    return;
+  }
+
+  snap.forEach(doc => {
+    const d = doc.data();
+    const li = document.createElement("li");
+    li.textContent =
+      `${d.mileage} км — ${new Date(d.date).toLocaleDateString()}`;
+    historyList.appendChild(li);
+  });
+
+  historyBlock.classList.remove("hidden");
+}
+
+/* ===== CLEAR DATA ===== */
+clearBtn.onclick = async () => {
+  if (!confirm("Удалить все записи?")) return;
+
+  const uid = auth.currentUser.uid;
+  const q = query(
+    collection(db, "mileages"),
+    where("uid", "==", uid)
+  );
+
+  const snap = await getDocs(q);
+  for (const d of snap.docs) {
+    await deleteDoc(doc(db, "mileages", d.id));
+  }
+
+  historyBlock.classList.add("hidden");
+};
 </script>
 
 </body>
