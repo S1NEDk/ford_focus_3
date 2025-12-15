@@ -7,7 +7,7 @@
 
 <style>
 :root {
-  --bg-card: rgba(255,255,255,0.18);
+  --card-bg: rgba(255,255,255,0.18);
   --text: #fff;
   --btn-bg: rgba(255,255,255,0.4);
   --modal-bg: #fff;
@@ -16,7 +16,7 @@
 }
 
 body.dark {
-  --bg-card: rgba(0,0,0,0.65);
+  --card-bg: rgba(0,0,0,0.65);
   --text: #f1f1f1;
   --btn-bg: rgba(0,0,0,0.55);
   --modal-bg: #121212;
@@ -49,10 +49,7 @@ body {
   backdrop-filter: blur(10px);
   z-index: 10;
 }
-
-body.dark .top-bar {
-  background: rgba(0,0,0,0.35);
-}
+body.dark .top-bar { background: rgba(0,0,0,0.35); }
 
 .top-btn {
   padding: 8px 14px;
@@ -67,7 +64,7 @@ body.dark .top-bar {
 .card {
   margin: 0 auto;
   max-width: 420px;
-  background: var(--bg-card);
+  background: var(--card-bg);
   padding: 30px;
   border-radius: 18px;
   backdrop-filter: blur(14px);
@@ -135,7 +132,8 @@ button.main {
 </div>
 
 <div class="card">
-  <p id="loginInfo">Войдите, чтобы сохранять и просматривать пробег</p>
+  <p id="loginInfo">Войдите, чтобы сохранять и просматривать пробег автомобиля</p>
+  <p class="hidden" id="userInfo">Вы вошли: <b id="userEmail"></b></p>
 </div>
 
 <!-- LOGIN -->
@@ -180,6 +178,10 @@ const loginPass = document.getElementById("loginPass");
 const regEmail = document.getElementById("regEmail");
 const regPass = document.getElementById("regPass");
 
+const loginInfo = document.getElementById("loginInfo");
+const userInfo = document.getElementById("userInfo");
+const userEmail = document.getElementById("userEmail");
+
 /* ===== THEME ===== */
 function applyTheme(dark) {
   document.body.classList.toggle("dark", dark);
@@ -190,15 +192,61 @@ applyTheme(localStorage.theme === "dark");
 themeBtn.onclick = () =>
   applyTheme(!document.body.classList.contains("dark"));
 
+/* ===== FIREBASE ===== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
+  authDomain: "focus3-df69e.firebaseapp.com",
+  projectId: "focus3-df69e"
+});
+const auth = getAuth(app);
+
 /* ===== MODALS ===== */
 loginBtn.onclick = () => loginModal.classList.add("show");
 registerBtn.onclick = () => registerModal.classList.add("show");
 closeLogin.onclick = () => loginModal.classList.remove("show");
 closeRegister.onclick = () => registerModal.classList.remove("show");
 
-/* ===== AUTH (заглушка, Firebase можно вернуть дальше) ===== */
-loginSubmit.onclick = () => alert("Login click works");
-regSubmit.onclick = () => alert("Register click works");
+/* ===== AUTH ACTIONS ===== */
+loginSubmit.onclick = async () => {
+  await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
+  loginModal.classList.remove("show");
+};
+
+regSubmit.onclick = async () => {
+  await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
+  registerModal.classList.remove("show");
+};
+
+logoutBtn.onclick = () => signOut(auth);
+
+/* ===== AUTH STATE ===== */
+onAuthStateChanged(auth, user => {
+  if (user) {
+    userEmail.textContent = user.email;
+    loginInfo.classList.add("hidden");
+    userInfo.classList.remove("hidden");
+
+    loginBtn.classList.add("hidden");
+    registerBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
+  } else {
+    loginInfo.classList.remove("hidden");
+    userInfo.classList.add("hidden");
+
+    loginBtn.classList.remove("hidden");
+    registerBtn.classList.remove("hidden");
+    logoutBtn.classList.add("hidden");
+  }
+});
 </script>
 
 </body>
