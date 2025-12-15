@@ -121,6 +121,12 @@ button.danger {
   font-size: 22px;
   cursor: pointer;
 }
+
+/* INFO TEXT */
+.info-text {
+  opacity: 0.9;
+  font-size: 15px;
+}
 </style>
 </head>
 
@@ -139,17 +145,26 @@ button.danger {
 </div>
 
 <div class="card">
-  <h2>Введите пробег</h2>
 
-  <form id="mileageForm">
-    <input type="number" id="mileage" placeholder="Пробег в км" required>
-    <button class="main">Сохранить</button>
-  </form>
+  <!-- INFO BEFORE LOGIN -->
+  <p class="info-text" id="loginInfo">
+    Войдите, чтобы сохранять и просматривать пробег автомобиля
+  </p>
 
-  <div class="history hidden" id="history">
-    <h3>Последние 5 записей</h3>
-    <ul id="historyList"></ul>
-    <button class="danger" id="clearBtn">Очистить данные</button>
+  <!-- FORM (ONLY AUTH) -->
+  <div id="authContent" class="hidden">
+    <h2>Введите пробег</h2>
+
+    <form id="mileageForm">
+      <input type="number" id="mileage" placeholder="Пробег в км" required>
+      <button class="main">Сохранить</button>
+    </form>
+
+    <div class="history hidden" id="history">
+      <h3>Последние 5 записей</h3>
+      <ul id="historyList"></ul>
+      <button class="danger" id="clearBtn">Очистить данные</button>
+    </div>
   </div>
 </div>
 
@@ -207,6 +222,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 /* DOM */
+const authContent = document.getElementById("authContent");
+const loginInfo = document.getElementById("loginInfo");
 const history = document.getElementById("history");
 const historyList = document.getElementById("historyList");
 
@@ -226,17 +243,24 @@ onAuthStateChanged(auth, async user => {
     logoutBtn.classList.remove("hidden");
     loginBtn.classList.add("hidden");
     registerBtn.classList.add("hidden");
+
+    loginInfo.classList.add("hidden");
+    authContent.classList.remove("hidden");
+
     await loadHistory(user.uid);
   } else {
     userInfo.classList.add("hidden");
-    history.classList.add("hidden");
     logoutBtn.classList.add("hidden");
     loginBtn.classList.remove("hidden");
     registerBtn.classList.remove("hidden");
+
+    authContent.classList.add("hidden");
+    history.classList.add("hidden");
+    loginInfo.classList.remove("hidden");
   }
 });
 
-/* LOAD HISTORY (UID) */
+/* LOAD HISTORY */
 async function loadHistory(uid) {
   historyList.innerHTML = "";
 
@@ -248,7 +272,7 @@ async function loadHistory(uid) {
   const snap = await getDocs(q);
   const records = [];
 
-  snap.forEach(d => records.push({ id: d.id, ...d.data() }));
+  snap.forEach(d => records.push(d.data()));
 
   records
     .sort((a,b)=>b.date.localeCompare(a.date))
@@ -263,7 +287,7 @@ async function loadHistory(uid) {
   history.classList.toggle("hidden", records.length === 0);
 }
 
-/* CLEAR DATA (UID) */
+/* CLEAR DATA */
 clearBtn.onclick = async () => {
   if (!confirm("Удалить ВСЕ записи пробега?")) return;
 
