@@ -24,7 +24,7 @@ body {
   color: var(--text);
 }
 
-/* ===== TOP BAR ===== */
+/* TOP BAR */
 .top-bar {
   position: fixed;
   top: 15px;
@@ -44,25 +44,18 @@ body {
   cursor: pointer;
 }
 
-.top-btn:hover {
-  background: rgba(255,255,255,0.55);
-}
+.hidden { display: none; }
 
-.hidden {
-  display: none;
-}
-
-/* ===== USER INFO ===== */
+/* USER INFO */
 .user-info {
   margin-top: 70px;
   text-align: center;
-  font-size: 16px;
 }
 
-/* ===== CARD ===== */
+/* CARD */
 .card {
   margin: 20px auto;
-  max-width: 380px;
+  max-width: 400px;
   background: var(--card-bg);
   padding: 30px;
   border-radius: 18px;
@@ -70,7 +63,7 @@ body {
   text-align: center;
 }
 
-/* ===== INPUT ===== */
+/* INPUT */
 input {
   width: 100%;
   padding: 12px;
@@ -79,7 +72,7 @@ input {
   border: none;
 }
 
-/* ===== BUTTON ===== */
+/* BUTTONS */
 button.main {
   width: 100%;
   padding: 12px;
@@ -90,22 +83,25 @@ button.main {
   cursor: pointer;
 }
 
-/* ===== HISTORY ===== */
+button.danger {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg,#ff6b6b,#c40000);
+  color: white;
+  cursor: pointer;
+}
+
+/* HISTORY */
 .history {
   margin-top: 15px;
   font-size: 14px;
   text-align: left;
 }
 
-.history h3 {
-  text-align: center;
-}
-
-.history ul {
-  padding-left: 18px;
-}
-
-/* ===== MODAL ===== */
+/* MODAL */
 .overlay {
   position: fixed;
   inset: 0;
@@ -113,16 +109,13 @@ button.main {
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 100;
 }
 
-.overlay.show {
-  display: flex;
-}
+.overlay.show { display: flex; }
 
 .modal {
   background: white;
-  color: #000;
+  color: black;
   padding: 25px;
   width: 300px;
   border-radius: 14px;
@@ -137,11 +130,6 @@ button.main {
   font-size: 22px;
   cursor: pointer;
 }
-
-.error {
-  color: red;
-  font-size: 14px;
-}
 </style>
 </head>
 
@@ -155,12 +143,10 @@ button.main {
   <button class="top-btn" id="themeBtn">🌙</button>
 </div>
 
-<!-- USER INFO -->
 <div class="user-info hidden" id="userInfo">
   Вы вошли: <b id="userEmail"></b>
 </div>
 
-<!-- MAIN CARD -->
 <div class="card">
   <h2>Введите пробег</h2>
 
@@ -172,10 +158,11 @@ button.main {
   <div class="history hidden" id="history">
     <h3>Последние 5 записей</h3>
     <ul id="historyList"></ul>
+    <button class="danger" id="clearBtn">Очистить данные</button>
   </div>
 </div>
 
-<!-- LOGIN MODAL -->
+<!-- LOGIN -->
 <div class="overlay" id="loginModal">
   <div class="modal">
     <span class="close" id="closeLogin">×</span>
@@ -183,11 +170,10 @@ button.main {
     <input id="loginEmail" placeholder="Email">
     <input id="loginPass" type="password" placeholder="Пароль">
     <button class="main" id="loginSubmit">Войти</button>
-    <p class="error" id="loginError"></p>
   </div>
 </div>
 
-<!-- REGISTER MODAL -->
+<!-- REGISTER -->
 <div class="overlay" id="registerModal">
   <div class="modal">
     <span class="close" id="closeRegister">×</span>
@@ -195,27 +181,14 @@ button.main {
     <input id="regEmail" placeholder="Email">
     <input id="regPass" type="password" placeholder="Пароль">
     <button class="main" id="regSubmit">Создать</button>
-    <p class="error" id="regError"></p>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* ===== FIREBASE ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
   authDomain: "focus3-df69e.firebaseapp.com",
@@ -226,19 +199,18 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ===== DOM ===== */
+/* DOM */
 const history = document.getElementById("history");
 const historyList = document.getElementById("historyList");
 
-/* ===== THEME ===== */
+/* THEME */
 if (localStorage.theme === "dark") document.body.classList.add("dark");
 themeBtn.onclick = () => {
   document.body.classList.toggle("dark");
-  localStorage.theme =
-    document.body.classList.contains("dark") ? "dark" : "light";
+  localStorage.theme = document.body.classList.contains("dark") ? "dark" : "light";
 };
 
-/* ===== AUTH STATE ===== */
+/* AUTH STATE */
 onAuthStateChanged(auth, async user => {
   if (user) {
     userEmail.textContent = user.email;
@@ -250,79 +222,71 @@ onAuthStateChanged(auth, async user => {
   } else {
     userInfo.classList.add("hidden");
     history.classList.add("hidden");
-    logoutBtn.classList.add("hidden");
-    loginBtn.classList.remove("hidden");
-    registerBtn.classList.remove("hidden");
   }
 });
 
-/* ===== HISTORY ===== */
+/* LOAD HISTORY */
 async function loadHistory(email) {
   historyList.innerHTML = "";
-
-  const snap = await getDocs(collection(db, "mileages"));
+  const snap = await getDocs(collection(db,"mileages"));
   const records = [];
 
-  snap.forEach(doc => {
-    const data = doc.data();
-    if (data.user?.toLowerCase() === email.toLowerCase()) {
-      records.push(data);
-    }
+  snap.forEach(d => {
+    const data = d.data();
+    if (data.user === email) records.push({ id: d.id, ...data });
   });
 
   records
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 5)
-    .forEach(item => {
+    .sort((a,b)=>b.date.localeCompare(a.date))
+    .slice(0,5)
+    .forEach(r => {
       const li = document.createElement("li");
-      li.textContent =
-        `${item.mileage} км — ${new Date(item.date).toLocaleDateString()}`;
+      li.textContent = `${r.mileage} км — ${new Date(r.date).toLocaleDateString()}`;
       historyList.appendChild(li);
     });
 
   history.classList.toggle("hidden", records.length === 0);
 }
 
-/* ===== EVENTS ===== */
+/* CLEAR DATA */
+clearBtn.onclick = async () => {
+  if (!confirm("Удалить ВСЕ записи пробега?")) return;
+  const email = auth.currentUser.email;
+  const snap = await getDocs(collection(db,"mileages"));
+
+  for (const d of snap.docs) {
+    if (d.data().user === email) {
+      await deleteDoc(doc(db,"mileages", d.id));
+    }
+  }
+  historyList.innerHTML = "";
+  history.classList.add("hidden");
+};
+
+/* EVENTS */
 loginBtn.onclick = () => loginModal.classList.add("show");
 registerBtn.onclick = () => registerModal.classList.add("show");
-
 closeLogin.onclick = () => loginModal.classList.remove("show");
 closeRegister.onclick = () => registerModal.classList.remove("show");
-
-loginModal.onclick = e => e.target === loginModal && loginModal.classList.remove("show");
-registerModal.onclick = e => e.target === registerModal && registerModal.classList.remove("show");
+logoutBtn.onclick = () => signOut(auth);
 
 loginSubmit.onclick = async () => {
-  try {
-    await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
-    loginModal.classList.remove("show");
-  } catch (e) {
-    loginError.textContent = e.message;
-  }
+  await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
+  loginModal.classList.remove("show");
 };
 
 regSubmit.onclick = async () => {
-  try {
-    await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
-    registerModal.classList.remove("show");
-  } catch (e) {
-    regError.textContent = e.message;
-  }
+  await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
+  registerModal.classList.remove("show");
 };
-
-logoutBtn.onclick = () => signOut(auth);
 
 mileageForm.onsubmit = async e => {
   e.preventDefault();
-  if (!auth.currentUser) return alert("Сначала войдите");
-
-  await addDoc(collection(db, "mileages"), {
+  await addDoc(collection(db,"mileages"),{
     mileage: Number(mileage.value),
     user: auth.currentUser.email,
     date: new Date().toISOString()
   });
-
   mileage.value = "";
   await loadHistory(auth.currentUser.email);
 };
