@@ -7,20 +7,18 @@
 
 <style>
 :root {
-  --card-bg: rgba(255,255,255,0.18);
-  --text: #ffffff;
-  --top-btn-bg: rgba(255,255,255,0.4);
-  --top-btn-border: rgba(255,255,255,0.5);
-  --modal-bg: #ffffff;
-  --modal-text: #000000;
+  --bg-card: rgba(255,255,255,0.18);
+  --text: #fff;
+  --btn-bg: rgba(255,255,255,0.4);
+  --modal-bg: #fff;
+  --modal-text: #000;
   --input-bg: #f2f2f2;
 }
 
 body.dark {
-  --card-bg: rgba(0,0,0,0.65);
+  --bg-card: rgba(0,0,0,0.65);
   --text: #f1f1f1;
-  --top-btn-bg: rgba(0,0,0,0.55);
-  --top-btn-border: rgba(255,255,255,0.25);
+  --btn-bg: rgba(0,0,0,0.55);
   --modal-bg: #121212;
   --modal-text: #f1f1f1;
   --input-bg: #1e1e1e;
@@ -29,7 +27,7 @@ body.dark {
 body {
   margin: 0;
   font-family: "Segoe UI", Arial, sans-serif;
-  background: url("car.jpg") center / cover no-repeat;
+  background: url("car.jpg") center/cover no-repeat;
   min-height: 100vh;
   color: var(--text);
   padding-top: 90px;
@@ -49,15 +47,18 @@ body {
   gap: 10px;
   background: rgba(255,255,255,0.25);
   backdrop-filter: blur(10px);
-  z-index: 100;
+  z-index: 10;
 }
-body.dark .top-bar { background: rgba(0,0,0,0.35); }
+
+body.dark .top-bar {
+  background: rgba(0,0,0,0.35);
+}
 
 .top-btn {
   padding: 8px 14px;
   border-radius: 10px;
-  background: var(--top-btn-bg);
-  border: 1px solid var(--top-btn-border);
+  background: var(--btn-bg);
+  border: none;
   color: var(--text);
   cursor: pointer;
 }
@@ -66,43 +67,11 @@ body.dark .top-bar { background: rgba(0,0,0,0.35); }
 .card {
   margin: 0 auto;
   max-width: 420px;
-  background: var(--card-bg);
+  background: var(--bg-card);
   padding: 30px;
   border-radius: 18px;
   backdrop-filter: blur(14px);
   text-align: center;
-}
-
-/* INPUTS */
-input {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 12px;
-  border-radius: 10px;
-  border: none;
-  background: var(--input-bg);
-  color: var(--modal-text);
-}
-
-/* BUTTONS */
-button.main {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg,#6ba8ff,#005fcc);
-  color: white;
-  cursor: pointer;
-}
-button.danger {
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg,#ff6b6b,#c40000);
-  color: white;
-  cursor: pointer;
 }
 
 /* MODAL */
@@ -113,7 +82,7 @@ button.danger {
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 200;
+  z-index: 20;
 }
 .overlay.show { display: flex; }
 
@@ -125,11 +94,32 @@ button.danger {
   border-radius: 14px;
   position: relative;
 }
+
 .close {
   position: absolute;
   top: 8px;
   right: 12px;
+  cursor: pointer;
   font-size: 22px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: none;
+  background: var(--input-bg);
+  color: var(--modal-text);
+}
+
+button.main {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg,#6ba8ff,#005fcc);
+  color: #fff;
   cursor: pointer;
 }
 </style>
@@ -137,7 +127,6 @@ button.danger {
 
 <body>
 
-<!-- TOP BAR -->
 <div class="top-bar">
   <button class="top-btn" id="loginBtn">Войти</button>
   <button class="top-btn" id="registerBtn">Создать</button>
@@ -146,19 +135,7 @@ button.danger {
 </div>
 
 <div class="card">
-  <p id="loginInfo">Войдите, чтобы сохранять и просматривать пробег автомобиля</p>
-
-  <div id="authContent" class="hidden">
-    <h2>Введите пробег</h2>
-    <form id="mileageForm">
-      <input type="number" id="mileage" required>
-      <button class="main">Сохранить</button>
-    </form>
-    <div id="history" class="hidden">
-      <ul id="historyList"></ul>
-      <button class="danger" id="clearBtn">Очистить данные</button>
-    </div>
-  </div>
+  <p id="loginInfo">Войдите, чтобы сохранять и просматривать пробег</p>
 </div>
 
 <!-- LOGIN -->
@@ -184,53 +161,44 @@ button.danger {
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
-  authDomain: "focus3-df69e.firebaseapp.com",
-  projectId: "focus3-df69e"
-});
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-/* THEME */
+/* ===== DOM ===== */
+const loginBtn = document.getElementById("loginBtn");
+const registerBtn = document.getElementById("registerBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 const themeBtn = document.getElementById("themeBtn");
-const applyTheme = d => {
-  document.body.classList.toggle("dark", d);
-  themeBtn.textContent = d ? "☀️" : "🌙";
-  localStorage.theme = d ? "dark" : "light";
-};
-applyTheme(localStorage.theme === "dark");
-themeBtn.onclick = () => applyTheme(!document.body.classList.contains("dark"));
 
-/* MODALS */
+const loginModal = document.getElementById("loginModal");
+const registerModal = document.getElementById("registerModal");
+const closeLogin = document.getElementById("closeLogin");
+const closeRegister = document.getElementById("closeRegister");
+
+const loginSubmit = document.getElementById("loginSubmit");
+const regSubmit = document.getElementById("regSubmit");
+
+const loginEmail = document.getElementById("loginEmail");
+const loginPass = document.getElementById("loginPass");
+const regEmail = document.getElementById("regEmail");
+const regPass = document.getElementById("regPass");
+
+/* ===== THEME ===== */
+function applyTheme(dark) {
+  document.body.classList.toggle("dark", dark);
+  themeBtn.textContent = dark ? "☀️" : "🌙";
+  localStorage.theme = dark ? "dark" : "light";
+}
+applyTheme(localStorage.theme === "dark");
+themeBtn.onclick = () =>
+  applyTheme(!document.body.classList.contains("dark"));
+
+/* ===== MODALS ===== */
 loginBtn.onclick = () => loginModal.classList.add("show");
 registerBtn.onclick = () => registerModal.classList.add("show");
 closeLogin.onclick = () => loginModal.classList.remove("show");
 closeRegister.onclick = () => registerModal.classList.remove("show");
 
-/* AUTH */
-loginSubmit.onclick = async () => {
-  await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
-  loginModal.classList.remove("show");
-};
-regSubmit.onclick = async () => {
-  await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
-  registerModal.classList.remove("show");
-};
-logoutBtn.onclick = () => signOut(auth);
-
-/* AUTH STATE */
-onAuthStateChanged(auth, user => {
-  authContent.classList.toggle("hidden", !user);
-  loginInfo.classList.toggle("hidden", !!user);
-  logoutBtn.classList.toggle("hidden", !user);
-  loginBtn.classList.toggle("hidden", !!user);
-  registerBtn.classList.toggle("hidden", !!user);
-});
+/* ===== AUTH (заглушка, Firebase можно вернуть дальше) ===== */
+loginSubmit.onclick = () => alert("Login click works");
+regSubmit.onclick = () => alert("Register click works");
 </script>
 
 </body>
