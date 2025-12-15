@@ -226,7 +226,7 @@ onAuthStateChanged(auth, async user => {
     logoutBtn.classList.remove("hidden");
     loginBtn.classList.add("hidden");
     registerBtn.classList.add("hidden");
-    await loadHistory(user.email);
+    await loadHistory(user.uid);
   } else {
     userInfo.classList.add("hidden");
     history.classList.add("hidden");
@@ -236,13 +236,13 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
-/* LOAD HISTORY */
-async function loadHistory(email) {
+/* LOAD HISTORY (UID) */
+async function loadHistory(uid) {
   historyList.innerHTML = "";
 
   const q = query(
     collection(db, "mileages"),
-    where("user", "==", email)
+    where("uid", "==", uid)
   );
 
   const snap = await getDocs(q);
@@ -263,13 +263,13 @@ async function loadHistory(email) {
   history.classList.toggle("hidden", records.length === 0);
 }
 
-/* CLEAR DATA */
+/* CLEAR DATA (UID) */
 clearBtn.onclick = async () => {
   if (!confirm("Удалить ВСЕ записи пробега?")) return;
 
   const q = query(
     collection(db,"mileages"),
-    where("user","==",auth.currentUser.email)
+    where("uid","==",auth.currentUser.uid)
   );
   const snap = await getDocs(q);
 
@@ -299,11 +299,12 @@ mileageForm.onsubmit = async e => {
   e.preventDefault();
   await addDoc(collection(db,"mileages"),{
     mileage: Number(mileage.value),
-    user: auth.currentUser.email,
+    uid: auth.currentUser.uid,
+    email: auth.currentUser.email,
     date: new Date().toISOString()
   });
   mileage.value = "";
-  await loadHistory(auth.currentUser.email);
+  await loadHistory(auth.currentUser.uid);
 };
 </script>
 
