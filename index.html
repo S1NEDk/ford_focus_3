@@ -10,65 +10,89 @@
   --card-bg: rgba(255,255,255,0.18);
   --text: #fff;
 }
+
+/* ===== THEME ===== */
 body.dark {
   --card-bg: rgba(0,0,0,0.6);
   --text: #f1f1f1;
 }
+
+/* ===== BASE ===== */
 body {
   margin: 0;
   font-family: "Segoe UI", Arial, sans-serif;
   background: url("car.jpg") center/cover no-repeat;
-  height: 100vh;
+  min-height: 100vh;
   color: var(--text);
+
+  /* КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ */
+  padding-top: 90px; /* место под top-bar */
 }
+
 .hidden { display: none; }
 
-/* TOP BAR */
+/* ===== TOP BAR ===== */
 .top-bar {
   position: fixed;
-  top: 15px;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 64px;
+
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 10px;
-  z-index: 10;
+
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(10px);
+  z-index: 100;
 }
+
 .top-btn {
   padding: 8px 14px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.35);
-  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.4);
+  border: 1px solid rgba(255,255,255,0.5);
   color: #fff;
   cursor: pointer;
+  font-size: 14px;
 }
 
-/* USER */
+.top-btn:hover {
+  background: rgba(255,255,255,0.6);
+}
+
+/* ===== USER INFO ===== */
 .user-info {
-  margin-top: 70px;
   text-align: center;
+  margin-bottom: 10px;
+  font-size: 15px;
 }
 
-/* CARD */
+/* ===== CARD ===== */
 .card {
-  margin: 20px auto;
+  margin: 0 auto;
   max-width: 420px;
   background: var(--card-bg);
   padding: 30px;
   border-radius: 18px;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
   text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
 }
 
-/* INPUT */
+/* ===== INPUT ===== */
 input {
   width: 100%;
   padding: 12px;
   margin-bottom: 12px;
   border-radius: 10px;
   border: none;
+  font-size: 15px;
 }
 
-/* BUTTONS */
+/* ===== BUTTONS ===== */
 button.main {
   width: 100%;
   padding: 12px;
@@ -77,7 +101,9 @@ button.main {
   background: linear-gradient(135deg,#6ba8ff,#005fcc);
   color: white;
   cursor: pointer;
+  font-size: 16px;
 }
+
 button.danger {
   width: 100%;
   margin-top: 10px;
@@ -89,14 +115,20 @@ button.danger {
   cursor: pointer;
 }
 
-/* HISTORY */
+/* ===== HISTORY ===== */
 .history {
-  margin-top: 15px;
+  margin-top: 18px;
   text-align: left;
   font-size: 14px;
 }
 
-/* MODAL */
+/* ===== INFO TEXT ===== */
+.info-text {
+  opacity: 0.9;
+  font-size: 15px;
+}
+
+/* ===== MODAL ===== */
 .overlay {
   position: fixed;
   inset: 0;
@@ -104,8 +136,11 @@ button.danger {
   display: none;
   justify-content: center;
   align-items: center;
+  z-index: 200;
 }
+
 .overlay.show { display: flex; }
+
 .modal {
   background: white;
   color: black;
@@ -113,7 +148,9 @@ button.danger {
   width: 300px;
   border-radius: 14px;
   position: relative;
+  text-align: center;
 }
+
 .close {
   position: absolute;
   top: 8px;
@@ -121,18 +158,12 @@ button.danger {
   font-size: 22px;
   cursor: pointer;
 }
-
-/* INFO TEXT */
-.info-text {
-  opacity: 0.9;
-  font-size: 15px;
-}
 </style>
 </head>
 
 <body>
 
-<!-- TOP BAR -->
+<!-- ===== TOP BAR ===== -->
 <div class="top-bar">
   <button class="top-btn" id="loginBtn">Войти</button>
   <button class="top-btn" id="registerBtn">Создать</button>
@@ -140,18 +171,18 @@ button.danger {
   <button class="top-btn" id="themeBtn">🌙</button>
 </div>
 
+<!-- ===== USER INFO ===== -->
 <div class="user-info hidden" id="userInfo">
   Вы вошли: <b id="userEmail"></b>
 </div>
 
+<!-- ===== MAIN CARD ===== -->
 <div class="card">
 
-  <!-- INFO BEFORE LOGIN -->
   <p class="info-text" id="loginInfo">
     Войдите, чтобы сохранять и просматривать пробег автомобиля
   </p>
 
-  <!-- FORM (ONLY AUTH) -->
   <div id="authContent" class="hidden">
     <h2>Введите пробег</h2>
 
@@ -168,7 +199,7 @@ button.danger {
   </div>
 </div>
 
-<!-- LOGIN -->
+<!-- ===== LOGIN MODAL ===== -->
 <div class="overlay" id="loginModal">
   <div class="modal">
     <span class="close" id="closeLogin">×</span>
@@ -179,7 +210,7 @@ button.danger {
   </div>
 </div>
 
-<!-- REGISTER -->
+<!-- ===== REGISTER MODAL ===== -->
 <div class="overlay" id="registerModal">
   <div class="modal">
     <span class="close" id="closeRegister">×</span>
@@ -314,6 +345,7 @@ loginSubmit.onclick = async () => {
   await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
   loginModal.classList.remove("show");
 };
+
 regSubmit.onclick = async () => {
   await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
   registerModal.classList.remove("show");
