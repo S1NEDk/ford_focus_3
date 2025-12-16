@@ -223,8 +223,38 @@ button.danger {
 </div>
 
 <script type="module">
-/* ===== THEME ===== */
+/* ===== DOM ===== */
+const loginBtn = document.getElementById("loginBtn");
+const registerBtn = document.getElementById("registerBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 const themeBtn = document.getElementById("themeBtn");
+
+const loginModal = document.getElementById("loginModal");
+const registerModal = document.getElementById("registerModal");
+const closeLogin = document.getElementById("closeLogin");
+const closeRegister = document.getElementById("closeRegister");
+
+const loginSubmit = document.getElementById("loginSubmit");
+const regSubmit = document.getElementById("regSubmit");
+
+const loginEmail = document.getElementById("loginEmail");
+const loginPass = document.getElementById("loginPass");
+const regEmail = document.getElementById("regEmail");
+const regPass = document.getElementById("regPass");
+
+const loginInfo = document.getElementById("loginInfo");
+const userInfo = document.getElementById("userInfo");
+const userEmail = document.getElementById("userEmail");
+
+const authContent = document.getElementById("authContent");
+const mileageForm = document.getElementById("mileageForm");
+const mileageInput = document.getElementById("mileage");
+
+const historyBlock = document.getElementById("history");
+const historyList = document.getElementById("historyList");
+const clearBtn = document.getElementById("clearBtn");
+
+/* ===== THEME ===== */
 function applyTheme(dark) {
   document.body.classList.toggle("dark", dark);
   themeBtn.textContent = dark ? "☀️" : "🌙";
@@ -233,7 +263,163 @@ function applyTheme(dark) {
 applyTheme(localStorage.theme === "dark");
 themeBtn.onclick = () =>
   applyTheme(!document.body.classList.contains("dark"));
+
+/* ===== FIREBASE ===== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
+  authDomain: "focus3-df69e.firebaseapp.com",
+  projectId: "focus3-df69e"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ===== MODALS ===== */
+loginBtn.onclick = () => loginModal.classList.add("show");
+registerBtn.onclick = () => registerModal.classList.add("show");
+closeLogin.onclick = () => loginModal.classList.remove("show");
+closeRegister.onclick = () => registerModal.classList.remove("show");
+
+/* ===== AUTH ACTIONS ===== */
+loginSubmit.onclick = async () => {
+  await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
+  loginModal.classList.remove("show");
+};
+
+regSubmit.onclick = async () => {
+  await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
+  registerModal.classList.remove("show");
+};
+
+logoutBtn.onclick = () => signOut(auth);
+
+/* ===== AUTH STATE ===== */
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    userEmail.textContent = user.email;
+    loginInfo.classList.add("hidden");
+    userInfo.classList.remove("hidden");
+    authContent.classList.remove("hidden");
+
+    loginBtn.classList.add("hidden");
+    registerBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
+
+    await loadHistory(user.uid);
+  } else {
+    loginInfo.classList.remove("hidden");
+    userInfo.classList.add("hidden");
+    authContent.classList.add("hidden");
+    historyBlock.classList.add("hidden");
+
+    loginBtn.classList.remove("hidden");
+    registerBtn.classList.remove("hidden");
+    logoutBtn.classList.add("hidden");
+  }
+});
+
+/* ===== SAVE MILEAGE ===== */
+mileageForm.onsubmit = async e => {
+  e.preventDefault();
+  const user = auth.currentUser;
+  if (!user) return;
+
+  await addDoc(collection(db, "mileages"), {
+    uid: user.uid,
+    mileage: Number(mileageInput.value),
+    date: new Date().toISOString()
+  });
+
+  mileageInput.value = "";
+  await loadHistory(user.uid);
+};
+
+/* ===== LOAD HISTORY ===== */
+async function loadHistory(uid) {
+  historyList.innerHTML = "";
+
+  const q = query(
+    collection(db, "mileages"),
+    where("uid", "==", uid),
+    orderBy("date", "desc"),
+    limit(5)
+  );
+
+  const snap = await getDocs(q);
+
+  if (snap.empty) {
+    historyBlock.classList.add("hidden");
+    return;
+  }
+
+  snap.forEach(doc => {
+    const d = doc.data();
+    const li = document.createElement("li");
+    li.textContent = `${d.mileage} км — ${new Date(d.date).toLocaleDateString()}`;
+    historyList.appendChild(li);
+  });
+
+  historyBlock.classList.remove("hidden");
+}
+
+/* ===== CLEAR DATA ===== */
+clearBtn.onclick = async () => {
+  if (!confirm("Удалить все записи?")) return;
+
+  const uid = auth.currentUser.uid;
+  const q = query(collection(db, "mileages"), where("uid", "==", uid));
+  const snap = await getDocs(q);
+
+  for (const d of snap.docs) {
+    await deleteDoc(doc(db, "mileages", d.id));
+  }
+
+  historyBlock.classList.add("hidden");
+};
 </script>
+
+<!-- LOGIN MODAL -->
+<div class="overlay" id="loginModal">
+  <div class="modal">
+    <span class="close" id="closeLogin">×</span>
+    <h3>Вход</h3>
+    <input id="loginEmail" placeholder="Email">
+    <input id="loginPass" type="password" placeholder="Пароль">
+    <button class="main" id="loginSubmit">Войти</button>
+  </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="overlay" id="registerModal">
+  <div class="modal">
+    <span class="close" id="closeRegister">×</span>
+    <h3>Регистрация</h3>
+    <input id="regEmail" placeholder="Email">
+    <input id="regPass" type="password" placeholder="Пароль">
+    <button class="main" id="regSubmit">Создать</button>
+  </div>
+</div>
 
 </body>
 </html>
