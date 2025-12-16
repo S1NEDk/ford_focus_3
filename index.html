@@ -139,6 +139,40 @@ button.danger {
   cursor: pointer;
   font-size: 22px;
 }
+
+/* PROJECT INFO */
+.project-info {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text);
+  background: rgba(0,0,0,0.45);
+  padding: 8px 10px;
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  z-index: 30;
+  max-width: 270px;
+}
+
+.project-info a {
+  color: #4da3ff;
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.project-info a:hover {
+  text-decoration: underline;
+}
+
+.tg-icon {
+  width: 14px;
+  height: 14px;
+}
 </style>
 </head>
 
@@ -174,61 +208,23 @@ button.danger {
   </div>
 </div>
 
-<!-- LOGIN MODAL -->
-<div class="overlay" id="loginModal">
-  <div class="modal">
-    <span class="close" id="closeLogin">×</span>
-    <h3>Вход</h3>
-    <input id="loginEmail" placeholder="Email">
-    <input id="loginPass" type="password" placeholder="Пароль">
-    <button class="main" id="loginSubmit">Войти</button>
-  </div>
-</div>
-
-<!-- REGISTER MODAL -->
-<div class="overlay" id="registerModal">
-  <div class="modal">
-    <span class="close" id="closeRegister">×</span>
-    <h3>Регистрация</h3>
-    <input id="regEmail" placeholder="Email">
-    <input id="regPass" type="password" placeholder="Пароль">
-    <button class="main" id="regSubmit">Создать</button>
-  </div>
+<!-- PROJECT INFO -->
+<div class="project-info">
+  Pet-проект по автоматизации тестирования.<br>
+  UI-тесты реализованы на Selenium,<br>
+  Backend-тесты на Rest Assured.<br>
+  <a href="https://t.me/S1NEDk" target="_blank">
+    <svg class="tg-icon" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="120" cy="120" r="120" fill="#2AABEE"/>
+      <path d="M179 68L152 184c-2 8-7 10-14 6l-38-28-18 17c-2 2-4 4-8 4l3-41 74-67c3-3-1-5-5-2l-91 57-39-12c-8-3-8-8 2-12l153-59c7-3 13 2 11 13z" fill="#fff"/>
+    </svg>
+    @S1NEDk
+  </a>
 </div>
 
 <script type="module">
-/* ===== DOM ===== */
-const loginBtn = document.getElementById("loginBtn");
-const registerBtn = document.getElementById("registerBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const themeBtn = document.getElementById("themeBtn");
-
-const loginModal = document.getElementById("loginModal");
-const registerModal = document.getElementById("registerModal");
-const closeLogin = document.getElementById("closeLogin");
-const closeRegister = document.getElementById("closeRegister");
-
-const loginSubmit = document.getElementById("loginSubmit");
-const regSubmit = document.getElementById("regSubmit");
-
-const loginEmail = document.getElementById("loginEmail");
-const loginPass = document.getElementById("loginPass");
-const regEmail = document.getElementById("regEmail");
-const regPass = document.getElementById("regPass");
-
-const loginInfo = document.getElementById("loginInfo");
-const userInfo = document.getElementById("userInfo");
-const userEmail = document.getElementById("userEmail");
-
-const authContent = document.getElementById("authContent");
-const mileageForm = document.getElementById("mileageForm");
-const mileageInput = document.getElementById("mileage");
-
-const historyBlock = document.getElementById("history");
-const historyList = document.getElementById("historyList");
-const clearBtn = document.getElementById("clearBtn");
-
 /* ===== THEME ===== */
+const themeBtn = document.getElementById("themeBtn");
 function applyTheme(dark) {
   document.body.classList.toggle("dark", dark);
   themeBtn.textContent = dark ? "☀️" : "🌙";
@@ -237,145 +233,6 @@ function applyTheme(dark) {
 applyTheme(localStorage.theme === "dark");
 themeBtn.onclick = () =>
   applyTheme(!document.body.classList.contains("dark"));
-
-/* ===== FIREBASE ===== */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-  deleteDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
-  authDomain: "focus3-df69e.firebaseapp.com",
-  projectId: "focus3-df69e"
-});
-
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-/* ===== MODALS ===== */
-loginBtn.onclick = () => loginModal.classList.add("show");
-registerBtn.onclick = () => registerModal.classList.add("show");
-closeLogin.onclick = () => loginModal.classList.remove("show");
-closeRegister.onclick = () => registerModal.classList.remove("show");
-
-/* ===== AUTH ACTIONS ===== */
-loginSubmit.onclick = async () => {
-  await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
-  loginModal.classList.remove("show");
-};
-
-regSubmit.onclick = async () => {
-  await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
-  registerModal.classList.remove("show");
-};
-
-logoutBtn.onclick = () => signOut(auth);
-
-/* ===== AUTH STATE ===== */
-onAuthStateChanged(auth, async user => {
-  if (user) {
-    userEmail.textContent = user.email;
-    loginInfo.classList.add("hidden");
-    userInfo.classList.remove("hidden");
-    authContent.classList.remove("hidden");
-
-    loginBtn.classList.add("hidden");
-    registerBtn.classList.add("hidden");
-    logoutBtn.classList.remove("hidden");
-
-    await loadHistory(user.uid);
-  } else {
-    loginInfo.classList.remove("hidden");
-    userInfo.classList.add("hidden");
-    authContent.classList.add("hidden");
-    historyBlock.classList.add("hidden");
-
-    loginBtn.classList.remove("hidden");
-    registerBtn.classList.remove("hidden");
-    logoutBtn.classList.add("hidden");
-  }
-});
-
-/* ===== SAVE MILEAGE ===== */
-mileageForm.onsubmit = async e => {
-  e.preventDefault();
-
-  const user = auth.currentUser;
-  if (!user) return;
-
-  await addDoc(collection(db, "mileages"), {
-    uid: user.uid,
-    mileage: Number(mileageInput.value),
-    date: new Date().toISOString()
-  });
-
-  mileageInput.value = "";
-  await loadHistory(user.uid);
-};
-
-/* ===== LOAD HISTORY ===== */
-async function loadHistory(uid) {
-  historyList.innerHTML = "";
-
-  const q = query(
-    collection(db, "mileages"),
-    where("uid", "==", uid),
-    orderBy("date", "desc"),
-    limit(5)
-  );
-
-  const snap = await getDocs(q);
-
-  if (snap.empty) {
-    historyBlock.classList.add("hidden");
-    return;
-  }
-
-  snap.forEach(doc => {
-    const d = doc.data();
-    const li = document.createElement("li");
-    li.textContent =
-      `${d.mileage} км — ${new Date(d.date).toLocaleDateString()}`;
-    historyList.appendChild(li);
-  });
-
-  historyBlock.classList.remove("hidden");
-}
-
-/* ===== CLEAR DATA ===== */
-clearBtn.onclick = async () => {
-  if (!confirm("Удалить все записи?")) return;
-
-  const uid = auth.currentUser.uid;
-  const q = query(
-    collection(db, "mileages"),
-    where("uid", "==", uid)
-  );
-
-  const snap = await getDocs(q);
-  for (const d of snap.docs) {
-    await deleteDoc(doc(db, "mileages", d.id));
-  }
-
-  historyBlock.classList.add("hidden");
-};
 </script>
 
 </body>
