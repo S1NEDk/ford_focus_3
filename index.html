@@ -255,7 +255,7 @@ saveBtn.onclick = async ()=>{
   });
 
   // отправляем на микросервис
-  fetch("http://localhost:3000/mileage",{
+  fetch("https://mileage-microservice.onrender.com/mileage", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
