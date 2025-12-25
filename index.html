@@ -6,366 +6,271 @@
 <title>Пробег автомобиля</title>
 
 <style>
-:root {
-  --card-bg: rgba(255, 255, 255, 0.2);
-  --text: #ffffff;
-  --btn-bg: rgba(255, 255, 255, 0.4);
-  --modal-bg: #ffffff;
-  --modal-text: #000000;
-  --input-bg: #f2f2f2;
-}
+    body {
+        margin: 0; padding: 0;
+        font-family: "Segoe UI", sans-serif;
+        background-image: url("car.jpg");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        transition: 0.3s;
+    }
+    body.dark {
+        background-color: #111;
+        background-blend-mode: multiply;
+        color: #fff;
+    }
+    .top-bar {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(255,255,255,0.12);
+        backdrop-filter: blur(10px);
+    }
+    .btn {
+        padding: 10px 18px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        background: rgba(255,255,255,0.28);
+        color: #fff;font-weight:600;
+    }
+    .btn.dark {
+        background: #222;color:#f8f8f8;
+    }
+    .panel {
+        max-width: 450px;
+        margin: 50px auto;
+        background: rgba(0,0,0,0.35);
+        padding: 25px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        color: #fff;
+        text-align: center;
+    }
+    input {
+        width:100%;padding:10px;border-radius:8px;
+        border:none;margin-bottom:15px;font-size:16px;
+    }
+    .modal {
+        position: fixed; inset: 0;
+        display: none; justify-content:center; align-items:center;
+        background: rgba(0,0,0,0.65);
+    }
+    .modal.show { display:flex }
+    .modal-content {
+        background: #fff;
+        padding: 25px;
+        border-radius: 14px;
+        width: 320px;
+        text-align: center;
+    }
+    body.dark .modal-content{
+        background:#222;color:white;
+    }
+    .close {
+        position:absolute; right:20px; top:20px; cursor:pointer;
+        font-size:22px;
+    }
 
-body.dark {
-  --card-bg: rgba(0, 0, 0, 0.6);
-  --text: #f4f4f4;
-  --btn-bg: rgba(0, 0, 0, 0.55);
-  --modal-bg: #111;
-  --modal-text: #fff;
-  --input-bg: #222;
-}
-
-body {
-  margin: 0;
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: url("car.jpg") center/cover no-repeat;
-  min-height: 100vh;
-  color: var(--text);
-  padding-top: 90px;
-}
-
-.hidden { display: none; }
-
-.top-bar {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%;
-  height: 64px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255,255,255,0.25);
-  backdrop-filter: blur(10px);
-  z-index: 10;
-}
-body.dark .top-bar { background: rgba(0,0,0,0.4); }
-
-.top-btn {
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: none;
-  background: var(--btn-bg);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.card {
-  margin: 0 auto;
-  max-width: 420px;
-  background: var(--card-bg);
-  padding: 30px;
-  border-radius: 18px;
-  text-align: center;
-}
-
-input {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  border: none;
-  background: var(--input-bg);
-  color: var(--modal-text);
-}
-
-button.main {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg,#6ba8ff,#005fcc);
-  color: #fff;
-  cursor: pointer;
-  margin-top: 5px;
-}
-button.danger {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg,#ff6b6b,#c40000);
-  color: white;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.history { text-align: left; margin-top: 20px; }
-.history li { margin: 4px 0; }
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 20;
-}
-.overlay.show { display: flex; }
-
-.modal {
-  background: var(--modal-bg);
-  color: var(--modal-text);
-  padding: 25px;
-  width: 300px;
-  border-radius: 14px;
-  position: relative;
-}
-.close {
-  position: absolute;
-  right: 12px;
-  top: 8px;
-  cursor: pointer;
-  font-size: 22px;
-}
+    .history-box {
+        font-size:16px; text-align:left; margin-top:15px;
+    }
 </style>
-</head>
 
+</head>
 <body>
 
 <div class="top-bar">
-  <button class="top-btn" id="loginBtn">Войти</button>
-  <button class="top-btn" id="registerBtn">Создать</button>
-  <button class="top-btn hidden" id="logoutBtn">Выйти</button>
-  <button class="top-btn" id="themeBtn">🌙</button>
+    <button class="btn" id="loginBtn">Войти</button>
+    <button class="btn" id="regBtn">Создать</button>
+    <button class="btn" id="themeBtn">🌙</button>
 </div>
 
-<div class="card">
-  <p id="loginInfo">Войдите, чтобы сохранять и просматривать пробег автомобиля</p>
+<div class="panel">
+    <div id="userInfo">Войдите, чтобы сохранять данные</div>
 
-  <p id="userInfo" class="hidden">Вы вошли: <b id="userEmail"></b></p>
+    <input type="number" id="mileage" placeholder="Пробег в км" disabled>
+    <button class="btn" id="saveMileage" disabled>Сохранить</button>
 
-  <div id="authContent" class="hidden">
-    <form id="mileageForm">
-      <input type="number" id="mileage" placeholder="Пробег в км" required />
-      <button class="main">Сохранить</button>
-    </form>
+    <button class="btn" id="logoutBtn" style="display:none;margin-top:10px;">Выйти</button>
 
-    <div class="history hidden" id="historyBlock">
-      <h4>Последние 5 записей</h4>
-      <ul id="historyList"></ul>
-      <button class="danger" id="clearBtn">Очистить данные</button>
+    <div class="history-box" id="history"></div>
+</div>
+
+
+<!-- Логин -->
+<div class="modal" id="loginModal">
+    <div class="modal-content">
+        <span class="close" data-close="loginModal">×</span>
+        <h3>Вход</h3>
+        <input type="email" id="loginEmail" placeholder="Email">
+        <input type="password" id="loginPass" placeholder="Пароль">
+        <button class="btn" id="loginSubmit">Войти</button>
     </div>
-  </div>
 </div>
 
-<!-- 🔐 МОДАЛ ОКНО ВХОДА -->
-<div class="overlay" id="loginModal">
-  <div class="modal">
-    <span class="close" id="closeLogin">×</span>
-    <h3>Вход</h3>
-    <input id="loginEmail" placeholder="Email" />
-    <input id="loginPass" type="password" placeholder="Пароль" />
-    <button class="main" id="loginSubmit">Войти</button>
-  </div>
-</div>
-
-<!-- 🆕 МОДАЛ ОКНО РЕГИСТРАЦИИ -->
-<div class="overlay" id="registerModal">
-  <div class="modal">
-    <span class="close" id="closeRegister">×</span>
-    <h3>Регистрация</h3>
-    <input id="regEmail" placeholder="Email" />
-    <input id="regPass" type="password" placeholder="Пароль" />
-    <button class="main" id="regSubmit">Создать</button>
-  </div>
+<!-- Регистрация -->
+<div class="modal" id="regModal">
+    <div class="modal-content">
+        <span class="close" data-close="regModal">×</span>
+        <h3>Создание аккаунта</h3>
+        <input type="email" id="regEmail" placeholder="Email">
+        <input type="password" id="regPass" placeholder="Пароль">
+        <button class="btn" id="regSubmit">Создать</button>
+    </div>
 </div>
 
 <script type="module">
-/* ------------------ ТЕМА ------------------ */
-function applyTheme(dark) {
-  document.body.classList.toggle("dark", dark);
-  themeBtn.textContent = dark ? "☀️" : "🌙";
-  localStorage.theme = dark ? "dark" : "light";
-}
-applyTheme(localStorage.theme === "dark");
-themeBtn.onclick = () => applyTheme(!document.body.classList.contains("dark"));
-
-/* ------------------ FIREBASE ------------------ */
+/*--------------------------------------------------
+   🔥 Firebase
+--------------------------------------------------*/
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
+  getAuth, onAuthStateChanged,
+  signInWithEmailAndPassword, signOut,
+  createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-  deleteDoc,
-  doc
+  getFirestore, addDoc, collection, query,
+  orderBy, where, limit, getDocs
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const app = initializeApp({
+const firebaseConfig = {
   apiKey: "AIzaSyCuTQ4a2znu4NezpilyL2QAyMQHt5SAozE",
   authDomain: "focus3-df69e.firebaseapp.com",
-  projectId: "focus3-df69e"
-});
+  projectId: "focus3-df69e",
+  storageBucket: "focus3-df69e.appspot.com",
+  messagingSenderId: "820116608318",
+  appId: "1:820116608318:web:927be143470b2aa885c86f"
+};
+
+const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ------------------ DOM ------------------ */
-const loginBtn = document.getElementById("loginBtn");
-const registerBtn = document.getElementById("registerBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+/*--------------------------------------------------
+   🌓 Тема — фиксим ошибку
+--------------------------------------------------*/
 const themeBtn = document.getElementById("themeBtn");
 
+function applyTheme(){
+    if(localStorage.theme === "dark"){
+        document.body.classList.add("dark");
+        themeBtn.textContent = "☀️";
+    } else {
+        document.body.classList.remove("dark");
+        themeBtn.textContent = "🌙";
+    }
+}
+applyTheme();
+
+themeBtn.onclick = ()=>{
+    localStorage.theme = localStorage.theme === "dark" ? "light" : "dark";
+    applyTheme();
+};
+
+/*--------------------------------------------------
+   UI элементы
+--------------------------------------------------*/
 const loginModal = document.getElementById("loginModal");
-const registerModal = document.getElementById("registerModal");
-const closeLogin = document.getElementById("closeLogin");
-const closeRegister = document.getElementById("closeRegister");
+const regModal = document.getElementById("regModal");
+const loginBtn = document.getElementById("loginBtn");
+const regBtn = document.getElementById("regBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const saveBtn = document.getElementById("saveMileage");
 
-const loginSubmit = document.getElementById("loginSubmit");
-const regSubmit = document.getElementById("regSubmit");
-
-/* ------------------ UI ------------------ */
-const loginInfo = document.getElementById("loginInfo");
-const userInfo = document.getElementById("userInfo");
-const userEmail = document.getElementById("userEmail");
-const authContent = document.getElementById("authContent");
-
-const mileageForm = document.getElementById("mileageForm");
-const mileageInput = document.getElementById("mileage");
-
-const historyBlock = document.getElementById("historyBlock");
-const historyList = document.getElementById("historyList");
-const clearBtn = document.getElementById("clearBtn");
-
-/* ------------------ АВТОРИЗАЦИЯ ------------------ */
-loginBtn.onclick = () => loginModal.classList.add("show");
-registerBtn.onclick = () => registerModal.classList.add("show");
-closeLogin.onclick = () => loginModal.classList.remove("show");
-closeRegister.onclick = () => registerModal.classList.remove("show");
-
-loginSubmit.onclick = async () => {
-  try {
-    await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
-    loginModal.classList.remove("show");
-  } catch (e) {
-    alert("Ошибка входа: " + e.message);
-  }
-};
-
-regSubmit.onclick = async () => {
-  try {
-    await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
-    registerModal.classList.remove("show");
-  } catch (e) {
-    alert("Ошибка регистрации: " + e.message);
-  }
-};
-
-logoutBtn.onclick = () => signOut(auth);
-
-/* ------------------ РЕНДЕР СТАТУСА ------------------ */
-onAuthStateChanged(auth, async user => {
-  if (user) {
-    loginBtn.classList.add("hidden");
-    registerBtn.classList.add("hidden");
-    logoutBtn.classList.remove("hidden");
-
-    loginInfo.classList.add("hidden");
-    userInfo.classList.remove("hidden");
-    userEmail.textContent = user.email;
-
-    authContent.classList.remove("hidden");
-
-    loadHistory(user.uid);
-  } else {
-    loginBtn.classList.remove("hidden");
-    registerBtn.classList.remove("hidden");
-    logoutBtn.classList.add("hidden");
-
-    loginInfo.classList.remove("hidden");
-    userInfo.classList.add("hidden");
-    authContent.classList.add("hidden");
-
-    historyBlock.classList.add("hidden");
-  }
+document.querySelectorAll(".close").forEach(c=>c.onclick=()=>{
+    document.getElementById(c.dataset.close).classList.remove("show");
 });
 
-/* ------------------ СОХРАНЕНИЕ ПРОБЕГА ------------------ */
-mileageForm.onsubmit = async e => {
-  e.preventDefault();
-  const user = auth.currentUser;
-  if (!user) return;
+/*--------------------------------------------------
+   📌 Авторизация
+--------------------------------------------------*/
+loginBtn.onclick = ()=>loginModal.classList.add("show");
+regBtn.onclick = ()=>regModal.classList.add("show");
 
-  await addDoc(collection(db, "mileages"), {
-    uid: user.uid,
-    mileage: Number(mileageInput.value),
-    date: new Date().toISOString()
-  });
-
-  // 🔗 Отправка в микросервис
-  fetch("http://localhost:3000/mileage", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      uid: user.uid,
-      email: user.email,
-      mileage: Number(mileageInput.value),
-      date: new Date().toISOString()
-    })
-  })
-  .then(r => r.json())
-  .then(d => alert(d.recommendation || "Данные отправлены"))
-  .catch(err => console.log("Ошибка отправки:", err));
-
-  mileageInput.value = "";
-  loadHistory(user.uid);
+document.getElementById("loginSubmit").onclick = async ()=>{
+    try{
+        await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
+        loginModal.classList.remove("show");
+    } catch(e){ alert(e.message) }
 };
 
-/* ------------------ ИСТОРИЯ ------------------ */
-async function loadHistory(uid) {
-  historyList.innerHTML = "";
-  const q = query(
-    collection(db, "mileages"),
-    where("uid", "==", uid),
-    orderBy("date", "desc"),
-    limit(5)
-  );
-  const res = await getDocs(q);
+document.getElementById("regSubmit").onclick = async ()=>{
+    try{
+        await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
+        regModal.classList.remove("show");
+    } catch(e){ alert(e.message) }
+};
 
-  if (res.empty) return historyBlock.classList.add("hidden");
+logoutBtn.onclick = ()=>signOut(auth);
 
-  res.forEach(d => {
-    const data = d.data();
-    const li = document.createElement("li");
-    li.textContent = `${data.mileage} км — ${new Date(data.date).toLocaleDateString()}`;
-    historyList.appendChild(li);
-  });
+/*--------------------------------------------------
+   🔥 Сохранение пробега
+--------------------------------------------------*/
+saveBtn.onclick = async ()=>{
+    const mileage = +document.getElementById("mileage").value.trim();
+    if(!auth.currentUser) return alert("Сначала войдите!");
+    if(!mileage) return alert("Введите пробег!");
 
-  historyBlock.classList.remove("hidden");
+    await addDoc(collection(db, "mileages"), {
+        uid: auth.currentUser.uid,
+        mileage: mileage,
+        date: new Date().toISOString()
+    });
+
+    // ⚡ отправка на микросервис
+    fetch("http://localhost:3000/analyze",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ uid: auth.currentUser.uid, mileage })
+    });
+
+    loadHistory();
+};
+
+/*--------------------------------------------------
+   📌 Вывод последних 5 записей
+--------------------------------------------------*/
+async function loadHistory(){
+    if(!auth.currentUser) return;
+
+    const q = query(
+        collection(db,"mileages"),
+        where("uid","==",auth.currentUser.uid),
+        orderBy("date","desc"),
+        limit(5)
+    );
+    const snap = await getDocs(q);
+    const h = document.getElementById("history");
+    h.innerHTML = "";
+    snap.forEach(d=>{
+        const v = d.data();
+        h.innerHTML += `• ${v.mileage} км, дата: ${new Date(v.date).toLocaleDateString()}<br>`;
+    });
 }
 
-/* ------------------ ОЧИСТИТЬ ------------------ */
-clearBtn.onclick = async () => {
-  if (!confirm("Удалить все записи?")) return;
-  const uid = auth.currentUser.uid;
-  const q = query(collection(db, "mileages"), where("uid", "==", uid));
-  const res = await getDocs(q);
-
-  for (const d of res.docs) await deleteDoc(doc(db, "mileages", d.id));
-
-  historyBlock.classList.add("hidden");
-};
+/*--------------------------------------------------
+   👤 Отслеживание входа
+--------------------------------------------------*/
+onAuthStateChanged(auth, user=>{
+    if(user){
+        document.getElementById("userInfo").textContent = `Вы вошли: ${user.email}`;
+        mileage.disabled = false;
+        saveBtn.disabled = false;
+        logoutBtn.style.display = "inline-block";
+        loadHistory();
+    } else {
+        document.getElementById("userInfo").textContent = "Войдите, чтобы сохранять данные";
+        mileage.disabled = true;
+        saveBtn.disabled = true;
+        logoutBtn.style.display = "none";
+        history.innerHTML = "";
+    }
+});
 </script>
 </body>
 </html>
