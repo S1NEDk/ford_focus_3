@@ -35,7 +35,6 @@ body {
 
 .hidden { display: none; }
 
-/* TOP BAR */
 .top-bar {
   position: fixed;
   top: 0;
@@ -60,18 +59,15 @@ body.dark .top-bar { background: rgba(0,0,0,0.35); }
   cursor: pointer;
 }
 
-/* CARD */
 .card {
   margin: 0 auto;
   max-width: 420px;
   background: var(--card-bg);
   padding: 30px;
   border-radius: 18px;
-  backdrop-filter: blur(14px);
   text-align: center;
 }
 
-/* INPUTS */
 input {
   width: 100%;
   padding: 12px;
@@ -82,7 +78,6 @@ input {
   color: var(--modal-text);
 }
 
-/* BUTTONS */
 button.main {
   width: 100%;
   padding: 12px;
@@ -104,14 +99,12 @@ button.danger {
   cursor: pointer;
 }
 
-/* HISTORY */
 .history {
   margin-top: 15px;
   text-align: left;
   font-size: 14px;
 }
 
-/* MODAL */
 .overlay {
   position: fixed;
   inset: 0;
@@ -140,45 +133,21 @@ button.danger {
   font-size: 22px;
 }
 
-/* PROJECT INFO */
 .project-info {
   position: fixed;
   bottom: 12px;
   left: 12px;
   font-size: 12px;
-  line-height: 1.4;
   color: var(--text);
   background: rgba(0,0,0,0.45);
   padding: 8px 10px;
   border-radius: 12px;
-  backdrop-filter: blur(6px);
-  z-index: 30;
-  max-width: 270px;
-}
-
-.project-info a {
-  color: #4da3ff;
-  text-decoration: none;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.project-info a:hover {
-  text-decoration: underline;
-}
-
-.tg-icon {
-  width: 14px;
-  height: 14px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- TOP BAR -->
 <div class="top-bar">
   <button class="top-btn" id="loginBtn">Войти</button>
   <button class="top-btn" id="registerBtn">Создать</button>
@@ -186,13 +155,10 @@ button.danger {
   <button class="top-btn" id="themeBtn">🌙</button>
 </div>
 
-<!-- MAIN CARD -->
 <div class="card">
   <p id="loginInfo">Войдите, чтобы сохранять и просматривать пробег автомобиля</p>
 
-  <p class="hidden" id="userInfo">
-    Вы вошли: <b id="userEmail"></b>
-  </p>
+  <p class="hidden" id="userInfo">Вы вошли: <b id="userEmail"></b></p>
 
   <div id="authContent" class="hidden">
     <form id="mileageForm">
@@ -208,39 +174,12 @@ button.danger {
   </div>
 </div>
 
-<!-- PROJECT INFO -->
-<div class="project-info">
-  Pet-проект по автоматизации тестирования.<br>
-  UI-тесты реализованы на Selenium,<br>
-  Backend-тесты на Rest Assured.<br>
-  <a href="https://t.me/S1NEDk" target="_blank">
-    <svg class="tg-icon" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="120" cy="120" r="120" fill="#2AABEE"/>
-      <path d="M179 68L152 184c-2 8-7 10-14 6l-38-28-18 17c-2 2-4 4-8 4l3-41 74-67c3-3-1-5-5-2l-91 57-39-12c-8-3-8-8 2-12l153-59c7-3 13 2 11 13z" fill="#fff"/>
-    </svg>
-    @S1NEDk
-  </a>
-</div>
-
 <script type="module">
 /* ===== DOM ===== */
 const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const themeBtn = document.getElementById("themeBtn");
-
-const loginModal = document.getElementById("loginModal");
-const registerModal = document.getElementById("registerModal");
-const closeLogin = document.getElementById("closeLogin");
-const closeRegister = document.getElementById("closeRegister");
-
-const loginSubmit = document.getElementById("loginSubmit");
-const regSubmit = document.getElementById("regSubmit");
-
-const loginEmail = document.getElementById("loginEmail");
-const loginPass = document.getElementById("loginPass");
-const regEmail = document.getElementById("regEmail");
-const regPass = document.getElementById("regPass");
 
 const loginInfo = document.getElementById("loginInfo");
 const userInfo = document.getElementById("userInfo");
@@ -267,23 +206,10 @@ themeBtn.onclick = () =>
 /* ===== FIREBASE ===== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-  deleteDoc,
-  doc
+  getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, deleteDoc, doc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const app = initializeApp({
@@ -295,51 +221,33 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ===== MODALS ===== */
+/* ===== AUTH ===== */
 loginBtn.onclick = () => loginModal.classList.add("show");
 registerBtn.onclick = () => registerModal.classList.add("show");
-closeLogin.onclick = () => loginModal.classList.remove("show");
-closeRegister.onclick = () => registerModal.classList.remove("show");
-
-/* ===== AUTH ACTIONS ===== */
-loginSubmit.onclick = async () => {
-  await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
-  loginModal.classList.remove("show");
-};
-
-regSubmit.onclick = async () => {
-  await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
-  registerModal.classList.remove("show");
-};
-
 logoutBtn.onclick = () => signOut(auth);
 
-/* ===== AUTH STATE ===== */
 onAuthStateChanged(auth, async user => {
   if (user) {
     userEmail.textContent = user.email;
     loginInfo.classList.add("hidden");
     userInfo.classList.remove("hidden");
     authContent.classList.remove("hidden");
-
     loginBtn.classList.add("hidden");
     registerBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
-
     await loadHistory(user.uid);
   } else {
     loginInfo.classList.remove("hidden");
     userInfo.classList.add("hidden");
     authContent.classList.add("hidden");
     historyBlock.classList.add("hidden");
-
     loginBtn.classList.remove("hidden");
     registerBtn.classList.remove("hidden");
     logoutBtn.classList.add("hidden");
   }
 });
 
-/* ===== SAVE MILEAGE ===== */
+/* ===== SAVE MILEAGE + MICROservice ===== */
 mileageForm.onsubmit = async e => {
   e.preventDefault();
   const user = auth.currentUser;
@@ -350,6 +258,25 @@ mileageForm.onsubmit = async e => {
     mileage: Number(mileageInput.value),
     date: new Date().toISOString()
   });
+
+  /* ⬇️⬇️⬇️ НОВОЕ: отправка в микросервис */
+  fetch("http://localhost:3000/mileage", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      uid: user.uid,
+      email: user.email,
+      mileage: Number(mileageInput.value),
+      date: new Date().toISOString()
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("Ответ микросервиса:", data);
+    alert(data.recommendation || "Данные отправлены в сервис!");
+  })
+  .catch(err => console.error("Ошибка микросервиса:", err));
+  /* ⬆️⬆️⬆️ */
 
   mileageInput.value = "";
   await loadHistory(user.uid);
@@ -368,11 +295,7 @@ async function loadHistory(uid) {
 
   const snap = await getDocs(q);
 
-  if (snap.empty) {
-    historyBlock.classList.add("hidden");
-    return;
-  }
-
+  if (snap.empty) return historyBlock.classList.add("hidden");
   snap.forEach(doc => {
     const d = doc.data();
     const li = document.createElement("li");
@@ -386,15 +309,10 @@ async function loadHistory(uid) {
 /* ===== CLEAR DATA ===== */
 clearBtn.onclick = async () => {
   if (!confirm("Удалить все записи?")) return;
-
   const uid = auth.currentUser.uid;
   const q = query(collection(db, "mileages"), where("uid", "==", uid));
   const snap = await getDocs(q);
-
-  for (const d of snap.docs) {
-    await deleteDoc(doc(db, "mileages", d.id));
-  }
-
+  for (const d of snap.docs) await deleteDoc(doc(db, "mileages", d.id));
   historyBlock.classList.add("hidden");
 };
 </script>
@@ -406,7 +324,7 @@ clearBtn.onclick = async () => {
     <h3>Вход</h3>
     <input id="loginEmail" placeholder="Email">
     <input id="loginPass" type="password" placeholder="Пароль">
-    <button class="main" id="loginSubmit">Войти</button>
+    <button class="main" id="loginSubmit" onclick="signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value); loginModal.classList.remove('show')">Войти</button>
   </div>
 </div>
 
@@ -417,7 +335,7 @@ clearBtn.onclick = async () => {
     <h3>Регистрация</h3>
     <input id="regEmail" placeholder="Email">
     <input id="regPass" type="password" placeholder="Пароль">
-    <button class="main" id="regSubmit">Создать</button>
+    <button class="main" id="regSubmit" onclick="createUserWithEmailAndPassword(auth, regEmail.value, regPass.value); registerModal.classList.remove('show')">Создать</button>
   </div>
 </div>
 
